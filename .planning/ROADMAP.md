@@ -29,10 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. User can sign up with email magic link and receive the link in their inbox
   2. User can log in via magic link and session persists across app restarts
   3. User can log out from Settings and session is cleared
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 01-01-PLAN.md — Initialize Expo project and configure Supabase backend
+- [ ] 01-02-PLAN.md — Implement session management with SessionProvider
+- [ ] 01-03-PLAN.md — Build authentication UI and protected routes
 
 ### Phase 2: Onboarding + Preferences
 **Goal**: New users complete preference survey that personalizes their prompt experience
@@ -117,7 +119,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Auth | 0/TBD | Not started | - |
+| 1. Foundation + Auth | 0/3 | Ready | - |
 | 2. Onboarding + Preferences | 0/TBD | Not started | - |
 | 3. Prompt Generation | 0/TBD | Not started | - |
 | 4. Response Capture | 0/TBD | Not started | - |
