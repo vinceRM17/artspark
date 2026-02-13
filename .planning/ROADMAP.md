@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Onboarding + Preferences** - User preference collection and storage (completed 2026-02-13)
 - [x] **Phase 3: Prompt Generation** - Core daily prompt engine with personalization (completed 2026-02-13)
 - [x] **Phase 4: Response Capture** - Photo upload with offline support (completed 2026-02-13)
-- [ ] **Phase 5: History + Tracking** - Past prompts and completion tracking
+- [x] **Phase 5: History + Tracking** - Past prompts and completion tracking (completed 2026-02-13)
 - [ ] **Phase 6: Notifications + Settings** - Daily reminders and preference editing
 
 ## Phase Details
@@ -98,8 +98,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Build data layer: PromptWithStatus type, history/detail service queries, usePromptHistory hook with pagination and caching
-- [ ] 05-02-PLAN.md — Build history list screen, prompt detail screen, wire navigation routes, and cache invalidation on response creation
+- [x] 05-01-PLAN.md — Build data layer: PromptWithStatus type, history/detail service queries, usePromptHistory hook with pagination and caching
+- [x] 05-02-PLAN.md — Build history list screen, prompt detail screen, wire navigation routes, and cache invalidation on response creation
 
 ### Phase 6: Notifications + Settings
 **Goal**: Users receive daily reminders at their chosen time and can adjust preferences as needed
@@ -128,7 +128,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Onboarding + Preferences | 3/3 | Complete | 2026-02-13 |
 | 3. Prompt Generation | 2/2 | Complete | 2026-02-13 |
 | 4. Response Capture | 2/2 | Complete | 2026-02-13 |
-| 5. History + Tracking | 0/2 | Planned | - |
+| 5. History + Tracking | 2/2 | Complete | 2026-02-13 |
 | 6. Notifications + Settings | 0/TBD | Not started | - |
 
 ---

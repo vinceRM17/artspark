@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-12)
 
 **Core value:** Every day, an artist opens the app and sees one clear, personalized prompt that sparks them to create — and over time builds a personal creative history they can look back on.
-**Current focus:** Phase 5 - History + Tracking
+**Current focus:** Phase 6 - Notifications + Settings
 
 ## Current Position
 
-Phase: 5 of 6 (History + Tracking)
-Plan: 2 of 2 in current phase
-Status: Phase 05 complete
-Last activity: 2026-02-13 — Completed 05-02-PLAN.md
+Phase: 6 of 6 (Notifications + Settings)
+Plan: 0 of TBD in current phase
+Status: Planning phase 06
+Last activity: 2026-02-13 — Phase 05 complete
 
 Progress: [████████░░] 83% (5/6 phases complete)
 
