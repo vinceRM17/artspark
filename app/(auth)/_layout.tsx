@@ -52,6 +52,20 @@ export default function AuthLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="history"
+        options={{
+          title: 'History',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="history/[id]"
+        options={{
+          title: 'Prompt Detail',
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 }

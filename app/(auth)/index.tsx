@@ -126,6 +126,16 @@ export default function Home() {
           </Text>
         </TouchableOpacity>
 
+        {/* View History */}
+        <TouchableOpacity
+          className="bg-white border-2 border-gray-300 rounded-xl py-4 mt-3"
+          onPress={() => router.push('/(auth)/history')}
+        >
+          <Text className="text-gray-700 text-center text-lg font-semibold">
+            View History
+          </Text>
+        </TouchableOpacity>
+
         {/* Settings Link */}
         <TouchableOpacity
           className="mt-8"

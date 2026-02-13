@@ -21,6 +21,7 @@ import * as Sharing from 'expo-sharing';
 import { useImagePicker } from '@/lib/hooks/useImagePicker';
 import { useResponseUpload } from '@/lib/hooks/useResponseUpload';
 import { useNetworkStatus } from '@/lib/hooks/useNetworkStatus';
+import { invalidateHistoryCache } from '@/lib/hooks/usePromptHistory';
 
 export default function Respond() {
   const params = useLocalSearchParams();
@@ -89,7 +90,10 @@ export default function Respond() {
     const response = await submitResponse(input);
 
     if (response) {
-      // Successfully uploaded - offer to share
+      // Successfully uploaded - invalidate history cache
+      await invalidateHistoryCache();
+
+      // Offer to share
       const firstImageUri = images[0]; // Keep reference to local URI for sharing
 
       Alert.alert(
@@ -107,7 +111,8 @@ export default function Respond() {
         ]
       );
     } else {
-      // Queued offline - alert already shown by hook
+      // Queued offline - invalidate cache and go back
+      await invalidateHistoryCache();
       router.back();
     }
   };
