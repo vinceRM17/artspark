@@ -95,10 +95,11 @@ Plans:
   2. User can tap a prompt to see detail view with full text and linked responses with photos
   3. Prompts are automatically marked as completed when user adds a response
   4. History list loads quickly and paginates smoothly (no performance issues with 100+ prompts)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 05-01-PLAN.md — Build data layer: PromptWithStatus type, history/detail service queries, usePromptHistory hook with pagination and caching
+- [ ] 05-02-PLAN.md — Build history list screen, prompt detail screen, wire navigation routes, and cache invalidation on response creation
 
 ### Phase 6: Notifications + Settings
 **Goal**: Users receive daily reminders at their chosen time and can adjust preferences as needed
@@ -127,7 +128,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Onboarding + Preferences | 3/3 | Complete | 2026-02-13 |
 | 3. Prompt Generation | 2/2 | Complete | 2026-02-13 |
 | 4. Response Capture | 2/2 | Complete | 2026-02-13 |
-| 5. History + Tracking | 0/TBD | Not started | - |
+| 5. History + Tracking | 0/2 | Planned | - |
 | 6. Notifications + Settings | 0/TBD | Not started | - |
 
 ---
