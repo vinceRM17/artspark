@@ -32,9 +32,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Initialize Expo project and configure Supabase backend
-- [ ] 01-02-PLAN.md — Implement session management with SessionProvider
-- [ ] 01-03-PLAN.md — Build authentication UI and protected routes
+- [x] 01-01-PLAN.md — Initialize Expo project and configure Supabase backend
+- [x] 01-02-PLAN.md — Implement session management with SessionProvider
+- [x] 01-03-PLAN.md — Build authentication UI and protected routes
 
 ### Phase 2: Onboarding + Preferences
 **Goal**: New users complete preference survey that personalizes their prompt experience
@@ -45,10 +45,12 @@ Plans:
   2. User preferences are saved to Supabase and persist across sessions
   3. User can skip optional preference sections (like color palettes) during onboarding
   4. User sees clear value explanation before notification permission request
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 02-01-PLAN.md — Build data layer (schemas, services, hooks) and reusable onboarding UI components
+- [ ] 02-02-PLAN.md — Build onboarding steps 1-4 (mediums, colors, subjects, exclusions)
+- [ ] 02-03-PLAN.md — Build step 5 (notifications), save to Supabase, integrate routing
 
 ### Phase 3: Prompt Generation
 **Goal**: Users receive one personalized daily prompt that respects their preferences and doesn't repeat recent subjects
@@ -115,12 +117,12 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Auth | 3/3 | ✓ Complete | 2026-02-12 |
-| 2. Onboarding + Preferences | 0/TBD | Not started | - |
+| 1. Foundation + Auth | 3/3 | Complete | 2026-02-12 |
+| 2. Onboarding + Preferences | 0/3 | Planned | - |
 | 3. Prompt Generation | 0/TBD | Not started | - |
 | 4. Response Capture | 0/TBD | Not started | - |
 | 5. History + Tracking | 0/TBD | Not started | - |
