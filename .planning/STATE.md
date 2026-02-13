@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-12)
 
 **Core value:** Every day, an artist opens the app and sees one clear, personalized prompt that sparks them to create — and over time builds a personal creative history they can look back on.
-**Current focus:** Phase 6 - Notifications + Settings
+**Current focus:** Milestone v1.0 COMPLETE - All 6 phases delivered
 
 ## Current Position
 
 Phase: 6 of 6 (Notifications + Settings)
-Plan: 1 of 2 in current phase
-Status: Executing phase 06
-Last activity: 2026-02-13 — Completed 06-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: MILESTONE COMPLETE
+Last activity: 2026-02-13 — Completed 06-02-PLAN.md (final plan)
 
-Progress: [█████████░] 92% (5.5/6 phases complete)
+Progress: [██████████] 100% (6/6 phases complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
-- Average duration: 16 min
-- Total execution time: 2.6 hours
+- Total plans completed: 11
+- Average duration: 15 min
+- Total execution time: ~2.7 hours
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [█████████░] 92% (5.5/6 phases complete)
 | 03    | 2     | 4m    | 2m       |
 | 04    | 2     | 6m    | 3m       |
 | 05    | 2     | 4m    | 2m       |
-| 06    | 1     | 2m    | 2m       |
+| 06    | 2     | 5m    | 2.5m     |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (3m), 04-02 (3m), 05-01 (2m), 05-02 (2m), 06-01 (2m)
-- Trend: Consistent 2-3 min execution - Phase 6 notification infrastructure started
+- Last 5 plans: 04-02 (3m), 05-01 (2m), 05-02 (2m), 06-01 (2m), 06-02 (3m)
+- Trend: Consistent 2-3 min execution across all phases after Phase 1
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3 | 2 tasks | 11 files |
@@ -48,6 +48,7 @@ Progress: [█████████░] 92% (5.5/6 phases complete)
 | Phase 05-history-tracking P01 | 2 | 2 tasks | 4 files |
 | Phase 05-history-tracking P02 | 2 | 2 tasks | 5 files |
 | Phase 06-notifications-settings P01 | 2 | 2 tasks | 7 files |
+| Phase 06-notifications-settings P02 | 3 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -99,18 +100,19 @@ Recent decisions affecting current work:
 - [06-01]: Delete responses before prompts in resetPromptHistory — Responses may have FK constraints to prompts; deleting child records first prevents constraint violations
 - [06-01]: Platform-specific time picker patterns — Android uses imperative DateTimePickerAndroid.open(), iOS uses declarative DateTimePicker component; single wrapper provides consistent interface
 - [06-01]: Confirmation dialog inside DangerZone component — Makes component self-contained, ensures destructive actions always have confirmation
+- [06-02]: Optimistic notification toggle with permission check and revert — Immediate UI feedback; revert on permission denial or error
+- [06-02]: Expandable chip grid sections with shared Save button — Keep settings compact, only show editor for section being edited
+- [06-02]: Filter exclusions to remove subjects on save — Same logic as onboarding step-4; prevents contradicting preferences
+- [06-02]: ScrollView instead of SectionList for settings — Small number of sections (5), no performance benefit from virtualization
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
 **Phase 1:**
 - Supabase email deliverability in production — Must configure custom SMTP (Resend/SendGrid) before launch to avoid magic links being filtered as spam
-
-**Phase 3:**
-- Seed-based randomization algorithm needs research — Date-to-seed strategy, Fisher-Yates shuffle with exclusions, handling large preference datasets
 
 **Phase 4:**
 - Supabase Storage bucket and RLS setup required — User must create 'responses' bucket and run Storage RLS policies before image uploads work
@@ -120,10 +122,10 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-13 (Phase 6 in progress - 1 plan executed)
-Stopped at: Completed 06-01-PLAN.md - notification service extensions and settings UI components
-Resume file: .planning/phases/06-notifications-settings/06-01-SUMMARY.md
+Last session: 2026-02-13 (Milestone v1.0 COMPLETE)
+Stopped at: All 6 phases complete. 11 plans executed across 6 phases.
+Resume file: N/A - milestone complete
 
 ---
 *Created: 2026-02-12*
-*Last updated: 2026-02-13 06:50*
+*Last updated: 2026-02-13*

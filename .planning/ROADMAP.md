@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Prompt Generation** - Core daily prompt engine with personalization (completed 2026-02-13)
 - [x] **Phase 4: Response Capture** - Photo upload with offline support (completed 2026-02-13)
 - [x] **Phase 5: History + Tracking** - Past prompts and completion tracking (completed 2026-02-13)
-- [ ] **Phase 6: Notifications + Settings** - Daily reminders and preference editing
+- [x] **Phase 6: Notifications + Settings** - Daily reminders and preference editing (completed 2026-02-13)
 
 ## Phase Details
 
@@ -67,8 +67,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Build prompt generation service layer (types, constants, algorithm)
-- [ ] 03-02-PLAN.md — Build home screen with daily prompt display and action buttons
+- [x] 03-01-PLAN.md — Build prompt generation service layer (types, constants, algorithm)
+- [x] 03-02-PLAN.md — Build home screen with daily prompt display and action buttons
 
 ### Phase 4: Response Capture
 **Goal**: Users can upload photos of their artwork in response to prompts, with images stored reliably and working offline
@@ -115,8 +115,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01-PLAN.md -- Service layer extensions (notifications, push token, history reset) and settings UI components
-- [ ] 06-02-PLAN.md -- Complete settings screen assembly with all sections and human verification
+- [x] 06-01-PLAN.md -- Service layer extensions (notifications, push token, history reset) and settings UI components
+- [x] 06-02-PLAN.md -- Complete settings screen assembly with all sections and human verification
 
 ## Progress
 
@@ -130,8 +130,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Prompt Generation | 2/2 | Complete | 2026-02-13 |
 | 4. Response Capture | 2/2 | Complete | 2026-02-13 |
 | 5. History + Tracking | 2/2 | Complete | 2026-02-13 |
-| 6. Notifications + Settings | 0/2 | Not started | - |
+| 6. Notifications + Settings | 2/2 | Complete | 2026-02-13 |
 
 ---
 *Roadmap created: 2026-02-12*
-*Last updated: 2026-02-14*
+*Last updated: 2026-02-13*
