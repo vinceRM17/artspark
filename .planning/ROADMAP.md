@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation + Auth** - Expo project setup with Supabase authentication (completed 2026-02-12)
 - [x] **Phase 2: Onboarding + Preferences** - User preference collection and storage (completed 2026-02-13)
-- [ ] **Phase 3: Prompt Generation** - Core daily prompt engine with personalization
+- [x] **Phase 3: Prompt Generation** - Core daily prompt engine with personalization (completed 2026-02-13)
 - [ ] **Phase 4: Response Capture** - Photo upload with offline support
 - [ ] **Phase 5: History + Tracking** - Past prompts and completion tracking
 - [ ] **Phase 6: Notifications + Settings** - Daily reminders and preference editing
@@ -124,11 +124,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. Foundation + Auth | 3/3 | Complete | 2026-02-12 |
 | 2. Onboarding + Preferences | 3/3 | Complete | 2026-02-13 |
-| 3. Prompt Generation | 0/2 | Planned | - |
+| 3. Prompt Generation | 2/2 | Complete | 2026-02-13 |
 | 4. Response Capture | 0/TBD | Not started | - |
 | 5. History + Tracking | 0/TBD | Not started | - |
 | 6. Notifications + Settings | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-02-12*
-*Last updated: 2026-02-13*
+*Last updated: 2026-02-14*
