@@ -5,7 +5,7 @@
  * with "I made something" and "Generate Now" action buttons.
  */
 
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useDailyPrompt } from '@/lib/hooks/useDailyPrompt';
 import { MEDIUM_OPTIONS, COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
@@ -98,14 +98,16 @@ export default function Home() {
         </View>
 
         {/* Action Buttons */}
-        {/* I made something - Phase 4 placeholder */}
+        {/* I made something - Navigate to response screen */}
         <TouchableOpacity
           className="bg-[#7C9A72] rounded-xl py-4 mb-3"
           onPress={() => {
-            Alert.alert(
-              'Coming Soon',
-              'Response capture is coming in the next update!'
-            );
+            if (prompt) {
+              router.push({
+                pathname: '/(auth)/respond',
+                params: { prompt_id: prompt.id, prompt_text: prompt.prompt_text }
+              });
+            }
           }}
         >
           <Text className="text-white text-center text-lg font-semibold">
