@@ -5,36 +5,37 @@
 See: .planning/PROJECT.md (updated 2026-02-12)
 
 **Core value:** Every day, an artist opens the app and sees one clear, personalized prompt that sparks them to create — and over time builds a personal creative history they can look back on.
-**Current focus:** Phase 1 - Foundation + Auth
+**Current focus:** Phase 2 - Onboarding & Preferences
 
 ## Current Position
 
-Phase: 1 of 6 (Foundation + Auth)
-Plan: 2 of 3 in current phase (01-01, 01-02 complete)
-Status: Active - executing phase 01 plans
-Last activity: 2026-02-12 — Plan 01-02 executed
+Phase: 2 of 6 (Onboarding & Preferences)
+Plan: 1 of 3 in current phase (02-01 complete)
+Status: Active - executing phase 02 plans
+Last activity: 2026-02-13 — Plan 02-01 executed
 
-Progress: [██░░░░░░░░] 16% (1/6 phases started)
+Progress: [███░░░░░░░] 25% (2/6 phases started, 1 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 73 min
-- Total execution time: 2.4 hours
+- Total plans completed: 3
+- Average duration: 50 min
+- Total execution time: 2.5 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01    | 2     | 146m  | 73m      |
+| 02    | 1     | 3m    | 3m       |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (144m), 01-02 (2m)
-- Trend: Significant improvement on second plan (foundation work complete)
+- Last 5 plans: 01-01 (144m), 01-02 (2m), 02-01 (3m)
+- Trend: Foundation work established, subsequent plans executing rapidly
 
 *Updated after each plan completion*
-| Phase 01 P02 | 2 | 3 tasks | 3 files |
+| Phase 02 P01 | 3 | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -54,6 +55,11 @@ Recent decisions affecting current work:
 - [01-02]: SessionProvider manages auth state via Supabase onAuthStateChange listener — Official Supabase pattern for React
 - [01-02]: useStorageState abstracts SecureStore (native) and localStorage (web) — Expo Router official authentication pattern
 - [01-02]: signInWithOtp used instead of deprecated signIn method — Supabase v2 best practice
+- [02-01]: Zod for validation — Type-safe validation with inference, better error messages than manual checks
+- [02-01]: Upsert pattern with onConflict: 'user_id' — Handles both first-time onboarding and preference updates with single call
+- [02-01]: Controlled components for ChipGrid/PreferenceChip — Parent manages state, components are pure presentation
+- [02-01]: Cream (#FFF8F0) and sage green (#7C9A72) as primary artistic colors — Warm, plant-inspired, calm aesthetic
+- [02-01]: __DEV__ bypass for onboarding status — Developers can skip onboarding during iteration without DB setup
 
 ### Pending Todos
 
@@ -72,10 +78,10 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-12 (plan 01-02 execution)
-Stopped at: Plan 01-02 complete - session management infrastructure ready
-Resume file: .planning/phases/01-foundation-auth/01-02-SUMMARY.md
+Last session: 2026-02-13 (plan 02-01 execution)
+Stopped at: Plan 02-01 complete - onboarding data layer and UI components ready
+Resume file: .planning/phases/02-onboarding-preferences/02-01-SUMMARY.md
 
 ---
 *Created: 2026-02-12*
-*Last updated: 2026-02-12 21:22*
+*Last updated: 2026-02-13 04:37*
