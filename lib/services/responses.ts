@@ -83,3 +83,78 @@ export async function getResponsesForPrompt(
 
   return (data as Response[]) || [];
 }
+
+/**
+ * Get all responses for a specific prompt with signed image URLs
+ * This version generates signed URLs for all images so they can be displayed
+ * @param userId - User ID to filter by
+ * @param promptId - Prompt ID to filter by
+ * @returns Array of responses with signed image URLs (empty if none)
+ */
+export async function getResponsesForPromptWithImages(
+  userId: string,
+  promptId: string
+): Promise<Response[]> {
+  // Dev mode fallback when no userId
+  if (!userId && __DEV__) {
+    return [
+      {
+        id: 'dev-response-1',
+        user_id: 'dev',
+        prompt_id: promptId,
+        image_urls: [
+          'https://via.placeholder.com/400x400.png?text=Sample+Image+1',
+          'https://via.placeholder.com/400x400.png?text=Sample+Image+2',
+        ],
+        notes: 'Sample response notes for development',
+        tags: ['dev', 'sample'],
+        created_at: new Date().toISOString(),
+      },
+    ];
+  }
+
+  const { data, error } = await supabase
+    .from('responses')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('prompt_id', promptId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to fetch responses: ${error.message}`);
+  }
+
+  const responses = (data as Response[]) || [];
+
+  // Generate signed URLs for all images
+  const responsesWithSignedUrls = await Promise.all(
+    responses.map(async (response) => {
+      const signedUrls = await Promise.all(
+        response.image_urls.map(async (url) => {
+          try {
+            const { data: signedData, error: signError } = await supabase.storage
+              .from('responses')
+              .createSignedUrl(url, 3600); // 1 hour expiry
+
+            if (signError) {
+              console.error('Error generating signed URL:', signError);
+              return url; // Return original URL if signing fails
+            }
+
+            return signedData.signedUrl;
+          } catch (err) {
+            console.error('Error in createSignedUrl:', err);
+            return url; // Return original URL if signing fails
+          }
+        })
+      );
+
+      return {
+        ...response,
+        image_urls: signedUrls,
+      };
+    })
+  );
+
+  return responsesWithSignedUrls;
+}

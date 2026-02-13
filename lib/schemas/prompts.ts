@@ -58,3 +58,8 @@ export const promptSchema = z.object({
   prompt_text: z.string(),
   created_at: z.string(),
 });
+
+export type PromptWithStatus = Prompt & {
+  response_count: number;
+  is_completed: boolean;
+};

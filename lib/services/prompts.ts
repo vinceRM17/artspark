@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { getPreferences, UserPreferences } from './preferences';
 import { MEDIUM_OPTIONS, SUBJECT_OPTIONS, COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
 import { CREATIVE_TWISTS } from '@/lib/constants/twists';
-import { Prompt } from '@/lib/schemas/prompts';
+import { Prompt, PromptWithStatus } from '@/lib/schemas/prompts';
 
 // Re-export Prompt type for convenience
 export type { Prompt } from '@/lib/schemas/prompts';
@@ -247,4 +247,85 @@ export async function createManualPrompt(userId: string): Promise<Prompt> {
   if (!newPrompt) throw new Error('Failed to create manual prompt');
 
   return newPrompt as Prompt;
+}
+
+/**
+ * Get paginated prompt history with completion status
+ * Returns prompts ordered by creation date (newest first)
+ * @param userId - User ID to filter by
+ * @param limit - Number of prompts to return (default 20)
+ * @param offset - Offset for pagination (default 0)
+ * @returns Object with prompts array and total count
+ */
+export async function getPromptHistory(
+  userId: string,
+  limit: number = 20,
+  offset: number = 0
+): Promise<{ prompts: PromptWithStatus[]; total: number }> {
+  const { data, error, count } = await supabase
+    .from('prompts')
+    .select('*, responses:responses(count)', { count: 'exact' })
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw error;
+
+  // Transform results to add response_count and is_completed
+  const prompts: PromptWithStatus[] = (data || []).map((p: any) => {
+    const response_count = p.responses?.[0]?.count || 0;
+    const is_completed = response_count > 0;
+
+    // Remove the raw responses property
+    const { responses, ...promptData } = p;
+
+    return {
+      ...promptData,
+      response_count,
+      is_completed,
+    } as PromptWithStatus;
+  });
+
+  return {
+    prompts,
+    total: count || 0,
+  };
+}
+
+/**
+ * Get a single prompt by ID with completion status
+ * @param userId - User ID to filter by
+ * @param promptId - Prompt ID to fetch
+ * @returns Prompt with status or null if not found
+ */
+export async function getPromptById(
+  userId: string,
+  promptId: string
+): Promise<PromptWithStatus | null> {
+  const { data, error } = await supabase
+    .from('prompts')
+    .select('*, responses:responses(count)')
+    .eq('user_id', userId)
+    .eq('id', promptId)
+    .single();
+
+  // Return null if not found
+  if (error && error.code === 'PGRST116') {
+    return null;
+  }
+
+  // Throw on other errors
+  if (error) throw error;
+
+  // Transform result
+  const response_count = data.responses?.[0]?.count || 0;
+  const is_completed = response_count > 0;
+
+  const { responses, ...promptData } = data;
+
+  return {
+    ...promptData,
+    response_count,
+    is_completed,
+  } as PromptWithStatus;
 }
