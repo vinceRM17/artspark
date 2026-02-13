@@ -80,10 +80,11 @@ Plans:
   3. User can add notes and optional tags to their response
   4. User can share their artwork outward via native share sheet (Instagram, Facebook, Pinterest, etc.)
   5. Responses created while offline are queued and upload automatically when connectivity returns
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 04-01-PLAN.md — Build data layer: response schema, upload constants, image upload/response/offline queue services
+- [ ] 04-02-PLAN.md — Build hooks (image picker, network status, upload) + response creation screen + share + wire home screen
 
 ### Phase 5: History + Tracking
 **Goal**: Users can browse past prompts and see their creative progress over time
@@ -125,7 +126,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Foundation + Auth | 3/3 | Complete | 2026-02-12 |
 | 2. Onboarding + Preferences | 3/3 | Complete | 2026-02-13 |
 | 3. Prompt Generation | 2/2 | Complete | 2026-02-13 |
-| 4. Response Capture | 0/TBD | Not started | - |
+| 4. Response Capture | 0/2 | Not started | - |
 | 5. History + Tracking | 0/TBD | Not started | - |
 | 6. Notifications + Settings | 0/TBD | Not started | - |
 
