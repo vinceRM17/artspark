@@ -17,17 +17,13 @@ export default function Index() {
       );
     }
 
-    // In dev, gracefully handle errors by defaulting to main app
+    // In dev, route to onboarding if not completed
     if (onboardingComplete === true) {
       return <Redirect href="/(auth)" />;
     }
 
-    if (onboardingComplete === false) {
-      return <Redirect href="/onboarding/step-1" />;
-    }
-
-    // If null (error or no session), default to main app in dev
-    return <Redirect href="/(auth)" />;
+    // If false or null (no session / error), go to onboarding in dev
+    return <Redirect href="/onboarding/step-1" />;
   }
 
   if (isLoading) {
