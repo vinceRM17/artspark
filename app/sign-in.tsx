@@ -1,0 +1,87 @@
+import { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { useSession } from '@/components/auth/SessionProvider';
+import { router, Redirect } from 'expo-router';
+
+export default function SignIn() {
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { session, signIn } = useSession();
+
+  // If already logged in, redirect to home
+  if (session) {
+    return <Redirect href="/(auth)" />;
+  }
+
+  const handleSignIn = async () => {
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await signIn(email.toLowerCase().trim());
+      Alert.alert(
+        'Check your email',
+        'We sent you a login code. Enter it on the next screen.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.push({ pathname: '/verify-otp', params: { email: email.toLowerCase().trim() } }),
+          },
+        ]
+      );
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to send login code');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <View className="flex-1 bg-white px-6 justify-center">
+      <Text className="text-3xl font-bold mb-2">Welcome to ArtSpark</Text>
+      <Text className="text-gray-600 mb-8">
+        Sign in to get your daily art inspiration
+      </Text>
+
+      <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
+      <TextInput
+        className="border border-gray-300 rounded-lg px-4 py-3 mb-4 text-base"
+        placeholder="your@email.com"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+        autoCorrect={false}
+        editable={!isLoading}
+      />
+
+      <TouchableOpacity
+        className="bg-blue-600 rounded-lg py-3 mb-4"
+        onPress={handleSignIn}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text className="text-white text-center font-semibold text-base">
+            Send Login Code
+          </Text>
+        )}
+      </TouchableOpacity>
+
+      <Text className="text-xs text-gray-500 text-center">
+        We'll send you a one-time code to sign in. No passwords needed.
+      </Text>
+    </View>
+  );
+}
