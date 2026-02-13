@@ -12,7 +12,7 @@ This roadmap delivers a daily art inspiration mobile app from foundation to laun
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation + Auth** - Expo project setup with Supabase authentication
+- [x] **Phase 1: Foundation + Auth** - Expo project setup with Supabase authentication (completed 2026-02-12)
 - [ ] **Phase 2: Onboarding + Preferences** - User preference collection and storage
 - [ ] **Phase 3: Prompt Generation** - Core daily prompt engine with personalization
 - [ ] **Phase 4: Response Capture** - Photo upload with offline support
@@ -119,7 +119,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Auth | 0/3 | Ready | - |
+| 1. Foundation + Auth | 3/3 | ✓ Complete | 2026-02-12 |
 | 2. Onboarding + Preferences | 0/TBD | Not started | - |
 | 3. Prompt Generation | 0/TBD | Not started | - |
 | 4. Response Capture | 0/TBD | Not started | - |
