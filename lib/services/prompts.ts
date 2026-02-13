@@ -329,3 +329,37 @@ export async function getPromptById(
     is_completed,
   } as PromptWithStatus;
 }
+
+/**
+ * Reset prompt history for a user (DANGER ZONE)
+ * Deletes all prompts and responses for the user
+ * Cannot be undone
+ *
+ * @param userId - User ID to delete history for
+ * @returns Success status for both operations
+ */
+export async function resetPromptHistory(userId: string): Promise<{
+  promptsDeleted: boolean;
+  responsesDeleted: boolean;
+}> {
+  // Delete responses first (child records - may have FK to prompts)
+  const { error: responsesError } = await supabase
+    .from('responses')
+    .delete()
+    .eq('user_id', userId);
+
+  if (responsesError) throw responsesError;
+
+  // Then delete prompts (parent records)
+  const { error: promptsError } = await supabase
+    .from('prompts')
+    .delete()
+    .eq('user_id', userId);
+
+  if (promptsError) throw promptsError;
+
+  return {
+    promptsDeleted: true,
+    responsesDeleted: true,
+  };
+}
