@@ -1,0 +1,250 @@
+/**
+ * Prompt generation service
+ *
+ * Core engine for generating personalized daily art prompts from user preferences.
+ * Handles subject rotation (14-day window), exclusion filtering, and date-based deduplication.
+ */
+
+import { supabase } from '@/lib/supabase';
+import { getPreferences, UserPreferences } from './preferences';
+import { MEDIUM_OPTIONS, SUBJECT_OPTIONS, COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
+import { CREATIVE_TWISTS } from '@/lib/constants/twists';
+import { Prompt } from '@/lib/schemas/prompts';
+
+// Re-export Prompt type for convenience
+export type { Prompt } from '@/lib/schemas/prompts';
+
+/**
+ * Get today's date in UTC YYYY-MM-DD format
+ * Used as date_key for all prompt operations
+ */
+function getTodayDateKey(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+/**
+ * Get random item from array
+ */
+function randomItem<T>(array: T[]): T {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+/**
+ * Get eligible subjects for prompt generation
+ * Filters out:
+ * 1. Excluded subjects (user preferences)
+ * 2. Recently used subjects (within repeatWindowDays)
+ *
+ * Graceful fallback: if all subjects are recently used,
+ * returns subjects minus exclusions (allowing repeats but respecting exclusions)
+ */
+async function getEligibleSubjects(
+  userId: string,
+  userSubjects: string[],
+  exclusions: string[],
+  repeatWindowDays: number = 14
+): Promise<string[]> {
+  // Calculate cutoff date for recent subjects
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - repeatWindowDays);
+  const cutoffISO = cutoffDate.toISOString();
+
+  // Query recent subjects
+  const { data: recentPrompts, error } = await supabase
+    .from('prompts')
+    .select('subject')
+    .eq('user_id', userId)
+    .gte('created_at', cutoffISO)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  // Build set of recently used subjects
+  const recentSubjects = new Set(recentPrompts?.map(p => p.subject) || []);
+
+  // Filter: remove exclusions AND recent subjects
+  const eligible = userSubjects.filter(
+    subject => !exclusions.includes(subject) && !recentSubjects.has(subject)
+  );
+
+  // Graceful fallback: if no eligible subjects, allow repeats but still respect exclusions
+  if (eligible.length === 0) {
+    return userSubjects.filter(subject => !exclusions.includes(subject));
+  }
+
+  return eligible;
+}
+
+/**
+ * Assemble human-readable prompt text from preference IDs
+ * Looks up display labels from OPTIONS constants
+ */
+function assemblePromptText(
+  medium: string,
+  subject: string,
+  colorRule: string | null,
+  twist: string | null
+): string {
+  // Look up display labels
+  const mediumLabel = MEDIUM_OPTIONS.find(m => m.id === medium)?.label || medium;
+  const subjectLabel = SUBJECT_OPTIONS.find(s => s.id === subject)?.label || subject;
+  const colorLabel = colorRule
+    ? COLOR_PALETTE_OPTIONS.find(c => c.id === colorRule)?.label || colorRule
+    : null;
+
+  // Assemble base prompt
+  let prompt = `Create a ${mediumLabel.toLowerCase()} piece featuring ${subjectLabel.toLowerCase()}`;
+
+  // Add color rule if present
+  if (colorLabel) {
+    prompt += ` with ${colorLabel.toLowerCase()} colors`;
+  }
+
+  // Add twist if present
+  if (twist) {
+    prompt += `. ${twist}`;
+  }
+
+  return prompt;
+}
+
+/**
+ * Generate prompt data from user preferences
+ * Does not save to database - returns prompt data object
+ */
+async function generatePrompt(
+  userId: string,
+  preferences: UserPreferences,
+  source: 'daily' | 'manual'
+): Promise<{
+  source: 'daily' | 'manual';
+  medium: string;
+  subject: string;
+  color_rule: string | null;
+  twist: string | null;
+  prompt_text: string;
+}> {
+  // Pick random medium
+  const medium = randomItem(preferences.art_mediums);
+
+  // Get eligible subjects and pick one
+  const eligibleSubjects = await getEligibleSubjects(
+    userId,
+    preferences.subjects,
+    preferences.exclusions || [],
+    14
+  );
+  const subject = randomItem(eligibleSubjects);
+
+  // Color rule: ~40% chance if user has color preferences
+  const color_rule =
+    preferences.color_palettes && preferences.color_palettes.length > 0 && Math.random() < 0.4
+      ? randomItem(preferences.color_palettes)
+      : null;
+
+  // Twist: ~50% chance
+  const twist = Math.random() < 0.5 ? randomItem([...CREATIVE_TWISTS]) : null;
+
+  // Assemble prompt text
+  const prompt_text = assemblePromptText(medium, subject, color_rule, twist);
+
+  return {
+    source,
+    medium,
+    subject,
+    color_rule,
+    twist,
+    prompt_text,
+  };
+}
+
+/**
+ * Get today's daily prompt (idempotent)
+ * Returns the same prompt for the entire day
+ * Creates new prompt if none exists for today
+ */
+export async function getTodayPrompt(userId: string): Promise<Prompt> {
+  const today = getTodayDateKey();
+
+  // Try to get existing daily prompt for today
+  const { data: existingPrompt, error } = await supabase
+    .from('prompts')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('date_key', today)
+    .eq('source', 'daily')
+    .single();
+
+  // Return existing prompt if found
+  if (existingPrompt && !error) {
+    return existingPrompt as Prompt;
+  }
+
+  // If error is not "no rows", throw it
+  if (error && error.code !== 'PGRST116') {
+    throw error;
+  }
+
+  // No existing prompt - generate new one
+  // Fetch user preferences
+  const preferences = await getPreferences(userId);
+  if (!preferences) {
+    throw new Error('User preferences not found. Please complete onboarding.');
+  }
+
+  // Generate prompt data
+  const promptData = await generatePrompt(userId, preferences, 'daily');
+
+  // Upsert to database (handles race conditions)
+  const { data: newPrompt, error: upsertError } = await supabase
+    .from('prompts')
+    .upsert(
+      {
+        user_id: userId,
+        date_key: today,
+        ...promptData,
+      },
+      { onConflict: 'user_id,date_key,source' }
+    )
+    .select()
+    .single();
+
+  if (upsertError) throw upsertError;
+  if (!newPrompt) throw new Error('Failed to create prompt');
+
+  return newPrompt as Prompt;
+}
+
+/**
+ * Create manual prompt (on-demand)
+ * Users can create unlimited manual prompts per day
+ * Each call generates a fresh prompt
+ */
+export async function createManualPrompt(userId: string): Promise<Prompt> {
+  const today = getTodayDateKey();
+
+  // Fetch user preferences
+  const preferences = await getPreferences(userId);
+  if (!preferences) {
+    throw new Error('User preferences not found. Please complete onboarding.');
+  }
+
+  // Generate prompt data
+  const promptData = await generatePrompt(userId, preferences, 'manual');
+
+  // Insert new manual prompt (not upsert - allows multiple per day)
+  const { data: newPrompt, error } = await supabase
+    .from('prompts')
+    .insert({
+      user_id: userId,
+      date_key: today,
+      ...promptData,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  if (!newPrompt) throw new Error('Failed to create manual prompt');
+
+  return newPrompt as Prompt;
+}
