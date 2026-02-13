@@ -64,10 +64,11 @@ Plans:
   5. Opening app multiple times on same day shows same daily prompt (date_key deduplication works)
   6. User can tap "Generate Now" to get an extra on-demand prompt
   7. Home screen has clear "I made something" button to respond to prompt
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 03-01-PLAN.md — Build prompt generation service layer (types, constants, algorithm)
+- [ ] 03-02-PLAN.md — Build home screen with daily prompt display and action buttons
 
 ### Phase 4: Response Capture
 **Goal**: Users can upload photos of their artwork in response to prompts, with images stored reliably and working offline
@@ -122,8 +123,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + Auth | 3/3 | Complete | 2026-02-12 |
-| 2. Onboarding + Preferences | 3/3 | ✓ Complete | 2026-02-13 |
-| 3. Prompt Generation | 0/TBD | Not started | - |
+| 2. Onboarding + Preferences | 3/3 | Complete | 2026-02-13 |
+| 3. Prompt Generation | 0/2 | Planned | - |
 | 4. Response Capture | 0/TBD | Not started | - |
 | 5. History + Tracking | 0/TBD | Not started | - |
 | 6. Notifications + Settings | 0/TBD | Not started | - |
