@@ -82,6 +82,41 @@ export default function SignIn() {
       <Text className="text-xs text-gray-500 text-center">
         We'll send you a one-time code to sign in. No passwords needed.
       </Text>
+
+      {__DEV__ && (
+        <TouchableOpacity
+          className="mt-8 border border-gray-300 rounded-lg py-3"
+          onPress={async () => {
+            setIsLoading(true);
+            try {
+              const devEmail = 'dev@artspark.local';
+              const devPassword = 'devpassword123';
+              // Try sign in first, then sign up if no account
+              const { error: signInError } = await (await import('@/lib/supabase')).supabase.auth.signInWithPassword({
+                email: devEmail,
+                password: devPassword,
+              });
+              if (signInError) {
+                const { error: signUpError } = await (await import('@/lib/supabase')).supabase.auth.signUp({
+                  email: devEmail,
+                  password: devPassword,
+                  options: { data: { display_name: 'Dev User' } },
+                });
+                if (signUpError) throw signUpError;
+              }
+              router.replace('/(auth)');
+            } catch (error: any) {
+              Alert.alert('Dev Login Error', error.message);
+            } finally {
+              setIsLoading(false);
+            }
+          }}
+        >
+          <Text className="text-gray-500 text-center text-sm">
+            Dev: Skip Login
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

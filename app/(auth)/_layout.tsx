@@ -14,8 +14,9 @@ export default function AuthLayout() {
     );
   }
 
-  // Redirect to sign-in if no session
-  if (!session) {
+  // Dev bypass: skip auth check in development
+  // Redirect to sign-in if no session (production only)
+  if (!session && !__DEV__) {
     return <Redirect href="/sign-in" />;
   }
 
