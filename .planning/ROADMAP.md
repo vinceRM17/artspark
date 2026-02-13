@@ -112,10 +112,11 @@ Plans:
   4. User sees "Pro (coming soon)" placeholder toggle in Settings for future subscription
   5. User can reset prompt history with confirmation dialog (danger action)
   6. Notifications work reliably in production builds on both iOS and Android
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] TBD during planning
+- [ ] 06-01-PLAN.md -- Service layer extensions (notifications, push token, history reset) and settings UI components
+- [ ] 06-02-PLAN.md -- Complete settings screen assembly with all sections and human verification
 
 ## Progress
 
@@ -129,7 +130,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Prompt Generation | 2/2 | Complete | 2026-02-13 |
 | 4. Response Capture | 2/2 | Complete | 2026-02-13 |
 | 5. History + Tracking | 2/2 | Complete | 2026-02-13 |
-| 6. Notifications + Settings | 0/TBD | Not started | - |
+| 6. Notifications + Settings | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-02-12*
