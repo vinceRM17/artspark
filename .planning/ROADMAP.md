@@ -13,7 +13,7 @@ This roadmap delivers a daily art inspiration mobile app from foundation to laun
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation + Auth** - Expo project setup with Supabase authentication (completed 2026-02-12)
-- [ ] **Phase 2: Onboarding + Preferences** - User preference collection and storage
+- [x] **Phase 2: Onboarding + Preferences** - User preference collection and storage (completed 2026-02-13)
 - [ ] **Phase 3: Prompt Generation** - Core daily prompt engine with personalization
 - [ ] **Phase 4: Response Capture** - Photo upload with offline support
 - [ ] **Phase 5: History + Tracking** - Past prompts and completion tracking
@@ -48,9 +48,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Build data layer (schemas, services, hooks) and reusable onboarding UI components
-- [ ] 02-02-PLAN.md — Build onboarding steps 1-4 (mediums, colors, subjects, exclusions)
-- [ ] 02-03-PLAN.md — Build step 5 (notifications), save to Supabase, integrate routing
+- [x] 02-01-PLAN.md — Build data layer (schemas, services, hooks) and reusable onboarding UI components
+- [x] 02-02-PLAN.md — Build onboarding steps 1-4 (mediums, colors, subjects, exclusions)
+- [x] 02-03-PLAN.md — Build step 5 (notifications), save to Supabase, integrate routing
 
 ### Phase 3: Prompt Generation
 **Goal**: Users receive one personalized daily prompt that respects their preferences and doesn't repeat recent subjects
@@ -122,7 +122,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + Auth | 3/3 | Complete | 2026-02-12 |
-| 2. Onboarding + Preferences | 0/3 | Planned | - |
+| 2. Onboarding + Preferences | 3/3 | ✓ Complete | 2026-02-13 |
 | 3. Prompt Generation | 0/TBD | Not started | - |
 | 4. Response Capture | 0/TBD | Not started | - |
 | 5. History + Tracking | 0/TBD | Not started | - |
@@ -130,4 +130,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 ---
 *Roadmap created: 2026-02-12*
-*Last updated: 2026-02-12*
+*Last updated: 2026-02-13*
