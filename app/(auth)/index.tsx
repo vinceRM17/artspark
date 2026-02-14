@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useDailyPrompt } from '@/lib/hooks/useDailyPrompt';
-import { MEDIUM_OPTIONS, COLOR_PALETTE_OPTIONS, SUBJECT_OPTIONS } from '@/lib/constants/preferences';
+import { MEDIUM_OPTIONS, COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
 import { fetchReferenceImages, ReferenceImage } from '@/lib/services/referenceImages';
 import { savePreferences, getPreferences } from '@/lib/services/preferences';
 import { useSession } from '@/components/auth/SessionProvider';
@@ -156,204 +156,213 @@ export default function Home() {
   const colorLabel = prompt.color_rule ? getLabel(COLOR_PALETTE_OPTIONS, prompt.color_rule) : null;
 
   return (
-    <ScrollView className="flex-1 bg-[#FFF8F0]">
-      <View className="px-6 pt-8 pb-8">
-        {/* Header with botanical accent */}
-        <View className="items-center mb-6">
-          <Text className="text-[#7C9A72] text-center text-lg font-semibold tracking-wider">
-            ArtSpark
-          </Text>
-          <VineDivider width={140} />
-          <Text className="text-gray-400 text-center text-xs mt-1">
-            {prompt.source === 'daily' ? "Today's Prompt" : 'Extra Prompt'}
-          </Text>
-        </View>
+    <>
+      <ScrollView className="flex-1 bg-[#FFF8F0]">
+        <View className="px-6 pt-8 pb-8">
+          {/* Header with botanical accent */}
+          <View className="items-center mb-6">
+            <Text className="text-[#7C9A72] text-center text-lg font-semibold tracking-wider">
+              ArtSpark
+            </Text>
+            <VineDivider width={140} />
+            <Text className="text-gray-400 text-center text-xs mt-1">
+              {prompt.source === 'daily' ? "Today's Prompt" : 'Extra Prompt'}
+            </Text>
+          </View>
 
-        {/* Main Prompt Card with leaf corners */}
-        <View className="bg-white rounded-2xl p-6 shadow-sm mb-4 overflow-hidden">
-          <LeafCorner position="topRight" size={70} opacity={0.1} />
-          <LeafCorner position="bottomLeft" size={55} opacity={0.08} />
+          {/* Main Prompt Card with leaf corners */}
+          <View className="bg-white rounded-2xl p-6 shadow-sm mb-4 overflow-hidden">
+            <LeafCorner position="topRight" size={70} opacity={0.1} />
+            <LeafCorner position="bottomLeft" size={55} opacity={0.08} />
 
-          {/* Prompt Text - the main event */}
-          <Text className="text-2xl font-semibold text-gray-900 leading-relaxed pr-6">
-            {prompt.prompt_text}
-          </Text>
+            {/* Prompt Text - the main event */}
+            <Text className="text-2xl font-semibold text-gray-900 leading-relaxed pr-6">
+              {prompt.prompt_text}
+            </Text>
 
-          {/* Details Section */}
-          <View className="mt-4 pt-4 border-t border-gray-100">
-            {/* Medium */}
-            <View className="mb-3">
-              <Text className="text-xs text-gray-400 mb-1">Medium</Text>
-              <Text className="text-sm text-gray-700">{mediumLabel}</Text>
+            {/* Details Section */}
+            <View className="mt-4 pt-4 border-t border-gray-100">
+              {/* Medium */}
+              <View className="mb-3">
+                <Text className="text-xs text-gray-400 mb-1">Medium</Text>
+                <Text className="text-sm text-gray-700">{mediumLabel}</Text>
+              </View>
+
+              {/* Color Rule (if present) */}
+              {colorLabel && (
+                <View className="mb-3">
+                  <Text className="text-xs text-gray-400 mb-1">Colors</Text>
+                  <Text className="text-sm text-gray-700">{colorLabel}</Text>
+                </View>
+              )}
+
+              {/* Twist (if present) */}
+              {prompt.twist && (
+                <View>
+                  <Text className="text-xs text-gray-400 mb-1">Twist</Text>
+                  <Text className="text-sm text-[#7C9A72] italic">{prompt.twist}</Text>
+                </View>
+              )}
             </View>
 
-            {/* Color Rule (if present) */}
-            {colorLabel && (
-              <View className="mb-3">
-                <Text className="text-xs text-gray-400 mb-1">Colors</Text>
-                <Text className="text-sm text-gray-700">{colorLabel}</Text>
-              </View>
-            )}
-
-            {/* Twist (if present) */}
-            {prompt.twist && (
-              <View>
-                <Text className="text-xs text-gray-400 mb-1">Twist</Text>
-                <Text className="text-sm text-[#7C9A72] italic">{prompt.twist}</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Thumbs Up / Down Row */}
-          <View className="flex-row items-center justify-center mt-5 pt-4 border-t border-gray-100">
-            <TouchableOpacity
-              onPress={handleThumbsUp}
-              className="flex-row items-center px-6 py-2 rounded-full mr-4"
-              style={{
-                backgroundColor: liked === true ? '#F0F5EE' : '#F9FAFB',
-                borderWidth: 1,
-                borderColor: liked === true ? '#7C9A72' : '#E5E7EB',
-              }}
-            >
-              <Text style={{ fontSize: 20 }}>
-                {liked === true ? '\u{1F44D}' : '\u{1F44D}'}
-              </Text>
-              <Text
-                className="ml-2 text-sm font-medium"
-                style={{ color: liked === true ? '#7C9A72' : '#9CA3AF' }}
+            {/* Thumbs Up / Down Row */}
+            <View className="flex-row items-center justify-center mt-5 pt-4 border-t border-gray-100">
+              <TouchableOpacity
+                onPress={handleThumbsUp}
+                className="flex-row items-center rounded-full mr-4"
+                style={{
+                  backgroundColor: liked === true ? '#F0F5EE' : '#F9FAFB',
+                  borderWidth: 1,
+                  borderColor: liked === true ? '#7C9A72' : '#E5E7EB',
+                  paddingHorizontal: 24,
+                  paddingVertical: 8,
+                }}
               >
-                Love it
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleThumbsDown}
-              className="flex-row items-center px-6 py-2 rounded-full"
-              style={{
-                backgroundColor: liked === false ? '#FEF2F2' : '#F9FAFB',
-                borderWidth: 1,
-                borderColor: liked === false ? '#EF4444' : '#E5E7EB',
-              }}
-            >
-              <Text style={{ fontSize: 20 }}>
-                {'\u{1F44E}'}
-              </Text>
-              <Text
-                className="ml-2 text-sm font-medium"
-                style={{ color: liked === false ? '#EF4444' : '#9CA3AF' }}
-              >
-                Not for me
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Reference Images Section */}
-        {(referenceImages.length > 0 || imagesLoading) && (
-          <View className="mb-6">
-            <Text className="text-xs text-gray-400 uppercase tracking-wider mb-3">
-              Reference Inspiration
-            </Text>
-            {imagesLoading ? (
-              <View className="h-32 justify-center items-center">
-                <ActivityIndicator size="small" color="#7C9A72" />
-              </View>
-            ) : (
-              <>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  className="mb-2"
+                <Text style={{ fontSize: 20 }}>{'👍'}</Text>
+                <Text
+                  style={{
+                    marginLeft: 8,
+                    fontSize: 14,
+                    fontWeight: '500',
+                    color: liked === true ? '#7C9A72' : '#9CA3AF',
+                  }}
                 >
-                  {referenceImages.map((img) => (
-                    <TouchableOpacity
-                      key={img.id}
-                      onPress={() => Linking.openURL(img.url)}
-                      activeOpacity={0.8}
-                      className="mr-3"
-                    >
-                      <Image
-                        source={{ uri: img.thumbUrl }}
-                        className="rounded-xl"
-                        style={{ width: 180, height: 130 }}
-                        resizeMode="cover"
-                      />
-                      <Text className="text-[10px] text-gray-400 mt-1">
-                        {img.photographer}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-                <Text className="text-[10px] text-gray-300 text-right">
-                  Public domain reference photos
+                  Love it
                 </Text>
-              </>
-            )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleThumbsDown}
+                className="flex-row items-center rounded-full"
+                style={{
+                  backgroundColor: liked === false ? '#FEF2F2' : '#F9FAFB',
+                  borderWidth: 1,
+                  borderColor: liked === false ? '#EF4444' : '#E5E7EB',
+                  paddingHorizontal: 24,
+                  paddingVertical: 8,
+                }}
+              >
+                <Text style={{ fontSize: 20 }}>{'👎'}</Text>
+                <Text
+                  style={{
+                    marginLeft: 8,
+                    fontSize: 14,
+                    fontWeight: '500',
+                    color: liked === false ? '#EF4444' : '#9CA3AF',
+                  }}
+                >
+                  Not for me
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        )}
 
-        {/* Vine divider before actions */}
-        <VineDivider width={200} opacity={0.15} />
+          {/* Reference Images Section */}
+          {(referenceImages.length > 0 || imagesLoading) && (
+            <View className="mb-6">
+              <Text className="text-xs text-gray-400 uppercase tracking-wider mb-3">
+                Reference Inspiration
+              </Text>
+              {imagesLoading ? (
+                <View className="h-32 justify-center items-center">
+                  <ActivityIndicator size="small" color="#7C9A72" />
+                </View>
+              ) : (
+                <>
+                  <View className="flex-row flex-wrap justify-between mb-2">
+                    {referenceImages.map((img) => {
+                      const imgWidth = (screenWidth - 48 - 8 * (referenceImages.length - 1)) / referenceImages.length;
+                      return (
+                        <TouchableOpacity
+                          key={img.id}
+                          onPress={() => Linking.openURL(img.url)}
+                          activeOpacity={0.8}
+                          style={{ width: imgWidth }}
+                        >
+                          <Image
+                            source={{ uri: img.thumbUrl }}
+                            className="rounded-lg"
+                            style={{ width: imgWidth, height: imgWidth * 0.75 }}
+                            resizeMode="cover"
+                          />
+                          <Text className="text-[10px] text-gray-400 mt-1" numberOfLines={1}>
+                            {img.photographer}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  <Text className="text-[10px] text-gray-300 text-right">
+                    Artwork from Art Institute of Chicago
+                  </Text>
+                </>
+              )}
+            </View>
+          )}
 
-        {/* Action Buttons */}
-        <View className="mt-4">
-          {/* I made something */}
-          <TouchableOpacity
-            className="bg-[#7C9A72] rounded-xl py-4 mb-3"
-            onPress={() => {
-              if (prompt) {
-                router.push({
-                  pathname: '/(auth)/respond',
-                  params: { prompt_id: prompt.id, prompt_text: prompt.prompt_text }
-                });
-              }
-            }}
-          >
-            <Text className="text-white text-center text-lg font-semibold">
-              I made something
-            </Text>
-          </TouchableOpacity>
+          {/* Vine divider before actions */}
+          <VineDivider width={200} opacity={0.15} />
 
-          {/* Generate New */}
-          <TouchableOpacity
-            className="bg-white border-2 border-[#7C9A72] rounded-xl py-4"
-            onPress={generateManualPrompt}
-            disabled={generating}
-          >
-            <Text className="text-[#7C9A72] text-center text-lg font-semibold">
-              {generating ? 'Generating...' : 'Generate New'}
-            </Text>
-          </TouchableOpacity>
+          {/* Action Buttons */}
+          <View className="mt-4">
+            {/* I made something */}
+            <TouchableOpacity
+              className="bg-[#7C9A72] rounded-xl py-4 mb-3"
+              onPress={() => {
+                if (prompt) {
+                  router.push({
+                    pathname: '/(auth)/respond',
+                    params: { prompt_id: prompt.id, prompt_text: prompt.prompt_text }
+                  });
+                }
+              }}
+            >
+              <Text className="text-white text-center text-lg font-semibold">
+                I made something
+              </Text>
+            </TouchableOpacity>
 
-          {/* View History */}
-          <TouchableOpacity
-            className="bg-white border-2 border-gray-300 rounded-xl py-4 mt-3"
-            onPress={() => router.push('/(auth)/history')}
-          >
-            <Text className="text-gray-700 text-center text-lg font-semibold">
-              View History
-            </Text>
-          </TouchableOpacity>
+            {/* Generate New */}
+            <TouchableOpacity
+              className="bg-white border-2 border-[#7C9A72] rounded-xl py-4"
+              onPress={generateManualPrompt}
+              disabled={generating}
+            >
+              <Text className="text-[#7C9A72] text-center text-lg font-semibold">
+                {generating ? 'Generating...' : 'Generate New'}
+              </Text>
+            </TouchableOpacity>
 
-          {/* Settings Link */}
-          <TouchableOpacity
-            className="mt-8"
-            onPress={() => router.push('/(auth)/settings')}
-          >
-            <Text className="text-gray-400 text-center text-sm underline">
-              Settings
-            </Text>
-          </TouchableOpacity>
+            {/* View History */}
+            <TouchableOpacity
+              className="bg-white border-2 border-gray-300 rounded-xl py-4 mt-3"
+              onPress={() => router.push('/(auth)/history')}
+            >
+              <Text className="text-gray-700 text-center text-lg font-semibold">
+                View History
+              </Text>
+            </TouchableOpacity>
+
+            {/* Settings Link */}
+            <TouchableOpacity
+              className="mt-8"
+              onPress={() => router.push('/(auth)/settings')}
+            >
+              <Text className="text-gray-400 text-center text-sm underline">
+                Settings
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ScrollView>
 
-      {/* Feedback Modal */}
+      {/* Feedback Modal - outside ScrollView */}
       <FeedbackModal
         visible={feedbackVisible}
         prompt={prompt}
         onSubmit={handleFeedbackSubmit}
         onCancel={() => setFeedbackVisible(false)}
       />
-    </ScrollView>
+    </>
   );
 }
