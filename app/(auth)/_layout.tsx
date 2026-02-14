@@ -66,6 +66,13 @@ export default function AuthLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="respond"
+        options={{
+          title: 'My Portfolio',
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 }

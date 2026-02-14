@@ -87,7 +87,7 @@ export default function OnboardingStep4() {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProgress));
 
       // Navigate to next step
-      router.push('/onboarding/step-5');
+      router.push('/onboarding/step-5-portfolio');
     } catch (error) {
       console.error('Failed to save onboarding progress:', error);
     }
@@ -108,7 +108,7 @@ export default function OnboardingStep4() {
   return (
     <OnboardingLayout
       step={4}
-      totalSteps={5}
+      totalSteps={6}
       title="Anything you'd rather avoid?"
       subtitle="We'll make sure these never show up in your prompts. Skip if nothing bothers you."
       onNext={handleSubmit(onSubmit)}

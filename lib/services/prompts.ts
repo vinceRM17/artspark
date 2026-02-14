@@ -2,7 +2,8 @@
  * Prompt generation service
  *
  * Core engine for generating personalized daily art prompts from user preferences.
- * Handles subject rotation (14-day window), exclusion filtering, and date-based deduplication.
+ * Handles subject rotation (14-day window), exclusion filtering, skill-aligned
+ * template selection, and date-based deduplication.
  */
 
 import { supabase } from '@/lib/supabase';
@@ -30,6 +31,19 @@ function getTodayDateKey(): string {
 function randomItem<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
+
+/**
+ * Explorer-level tips appended to prompts for beginners
+ */
+const EXPLORER_TIPS = [
+  "Tip: Start with light pencil guidelines before adding color.",
+  "Tip: Take a moment to observe your subject before making any marks.",
+  "Tip: Don't worry about perfection — focus on the process and enjoy it!",
+  "Tip: Work from large shapes to small details.",
+  "Tip: Squint at your subject to see the big value patterns.",
+  "Tip: Take breaks and come back with fresh eyes.",
+  "Tip: Use a reference photo if you need one — all artists do!",
+];
 
 /**
  * Get eligible subjects for prompt generation
@@ -79,16 +93,17 @@ async function getEligibleSubjects(
 
 /**
  * Assemble human-readable prompt text using artistically meaningful templates
- * Pairs medium + subject with appropriate artistic direction
+ * Pairs medium + subject with appropriate artistic direction based on skill tier
  */
 function assemblePromptText(
   medium: string,
   subject: string,
   colorRule: string | null,
-  twist: string | null
+  twist: string | null,
+  difficulty: ReturnType<typeof getDifficultyOption>
 ): string {
-  // Get an artistically meaningful base prompt
-  let prompt = getPromptTemplate(medium, subject);
+  // Get an artistically meaningful base prompt filtered by skill tier
+  let prompt = getPromptTemplate(medium, subject, difficulty.templateTier);
 
   // Add color direction if present
   if (colorRule) {
@@ -104,6 +119,11 @@ function assemblePromptText(
   // Ensure it ends with a period
   if (!prompt.endsWith('.')) {
     prompt += '.';
+  }
+
+  // For explorer level, append a helpful tip
+  if (difficulty.id === 'explorer') {
+    prompt += ' ' + randomItem(EXPLORER_TIPS);
   }
 
   return prompt;
@@ -138,11 +158,11 @@ async function generatePrompt(
   const subject = randomItem(eligibleSubjects);
 
   // Get difficulty settings
-  const difficulty = getDifficultyOption(preferences.difficulty || 'intermediate');
+  const difficulty = getDifficultyOption(preferences.difficulty || 'developing');
 
-  // Color rule: ~40% chance if user has color preferences
+  // Color rule: chance based on difficulty level
   const color_rule =
-    preferences.color_palettes && preferences.color_palettes.length > 0 && Math.random() < 0.4
+    preferences.color_palettes && preferences.color_palettes.length > 0 && Math.random() < difficulty.colorRuleChance
       ? randomItem(preferences.color_palettes)
       : null;
 
@@ -152,8 +172,8 @@ async function generatePrompt(
     ? randomItem(compatibleTwists).text
     : null;
 
-  // Assemble prompt text
-  const prompt_text = assemblePromptText(medium, subject, color_rule, twist);
+  // Assemble prompt text with skill-aligned templates
+  const prompt_text = assemblePromptText(medium, subject, color_rule, twist, difficulty);
 
   return {
     source,

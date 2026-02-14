@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { View, Text, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSession } from '@/components/auth/SessionProvider';
@@ -21,7 +21,7 @@ type OnboardingProgress = {
   difficulty?: string;
 };
 
-export default function Step5() {
+export default function Step6() {
   const router = useRouter();
   const { session } = useSession();
 
@@ -74,7 +74,7 @@ export default function Step5() {
           color_palettes: progress.colorPalettes || [],
           subjects: progress.subjects || [],
           exclusions: progress.exclusions || [],
-          difficulty: progress.difficulty || 'intermediate',
+          difficulty: progress.difficulty || 'developing',
           notification_time: formattedTime,
           notification_enabled: permissionGranted,
           onboarding_completed: true,
@@ -117,8 +117,8 @@ export default function Step5() {
   if (showPermissionExplanation) {
     return (
       <OnboardingLayout
-        step={5}
-        totalSteps={5}
+        step={6}
+        totalSteps={6}
         title="When should we inspire you?"
         subtitle="Get a daily art prompt at your favorite creative time."
         onNext={handleEnableNotifications}
@@ -142,8 +142,8 @@ export default function Step5() {
   // Show time picker
   return (
     <OnboardingLayout
-      step={5}
-      totalSteps={5}
+      step={6}
+      totalSteps={6}
       title="When should we inspire you?"
       subtitle="Pick your preferred time for daily prompts."
       onNext={handleComplete}

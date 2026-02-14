@@ -13,6 +13,8 @@
  *   color_palettes TEXT[] DEFAULT '{}',
  *   subjects TEXT[] NOT NULL DEFAULT '{}',
  *   exclusions TEXT[] DEFAULT '{}',
+ *   difficulty TEXT DEFAULT 'developing',
+ *   tier TEXT DEFAULT 'free',
  *   notification_time TIME DEFAULT '09:00:00',
  *   notification_enabled BOOLEAN DEFAULT TRUE,
  *   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -36,6 +38,7 @@
  */
 
 import { supabase } from '@/lib/supabase';
+import type { UserTier } from '@/lib/constants/tiers';
 
 export type UserPreferences = {
   id: string;
@@ -45,7 +48,8 @@ export type UserPreferences = {
   color_palettes: string[];
   subjects: string[];
   exclusions: string[];
-  difficulty: string; // 'beginner' | 'intermediate' | 'advanced'
+  difficulty: string;
+  tier: UserTier;
   notification_time: string; // HH:MM:SS format
   notification_enabled: boolean;
   created_at: string;
@@ -106,4 +110,17 @@ export async function getPreferences(userId: string): Promise<UserPreferences | 
  */
 export async function markOnboardingComplete(userId: string): Promise<UserPreferences> {
   return savePreferences(userId, { onboarding_completed: true });
+}
+
+/**
+ * Track a custom medium name for crowdsourcing
+ * Calls an RPC function that upserts the custom_mediums table
+ */
+export async function trackCustomMedium(mediumName: string): Promise<void> {
+  try {
+    await supabase.rpc('increment_custom_medium', { medium_name: mediumName });
+  } catch {
+    // Non-critical — don't block the user if tracking fails
+    console.warn('Failed to track custom medium:', mediumName);
+  }
 }

@@ -1,27 +1,21 @@
 /**
  * Preference option lists for onboarding flow
  * Each option has an id (stored in database) and a user-facing label
+ *
+ * Medium options are derived from the detailed medium definitions in mediums.ts
  */
+
+import { MEDIUM_INFO } from './mediums';
 
 export type PreferenceOption = {
   id: string;
   label: string;
 };
 
-export const MEDIUM_OPTIONS: PreferenceOption[] = [
-  { id: 'watercolor', label: 'Watercolor' },
-  { id: 'gouache', label: 'Gouache' },
-  { id: 'acrylic', label: 'Acrylic' },
-  { id: 'oil', label: 'Oil Paint' },
-  { id: 'pencil', label: 'Pencil' },
-  { id: 'ink', label: 'Ink' },
-  { id: 'digital', label: 'Digital' },
-  { id: 'collage', label: 'Collage' },
-  { id: 'paper-art', label: 'Paper Art' },
-  { id: 'pastel', label: 'Pastel' },
-  { id: 'charcoal', label: 'Charcoal' },
-  { id: 'mixed-media', label: 'Mixed Media' },
-];
+export const MEDIUM_OPTIONS: PreferenceOption[] = Object.values(MEDIUM_INFO).map(m => ({
+  id: m.id,
+  label: m.label,
+}));
 
 export const COLOR_PALETTE_OPTIONS: PreferenceOption[] = [
   { id: 'earthy', label: 'Earthy' },

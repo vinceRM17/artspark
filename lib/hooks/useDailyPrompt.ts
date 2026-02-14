@@ -3,7 +3,7 @@
  *
  * Manages daily prompt state with AsyncStorage caching and on-demand generation.
  * In dev mode, reads onboarding preferences from AsyncStorage and generates
- * preference-aware mock prompts locally.
+ * preference-aware mock prompts locally with skill-aligned templates.
  */
 
 import { useState, useEffect } from 'react';
@@ -14,6 +14,7 @@ import { useSession } from '@/components/auth/SessionProvider';
 import { getTwistsForMedium } from '@/lib/constants/twists';
 import { getPromptTemplate } from '@/lib/constants/promptTemplates';
 import { getDifficultyOption, DifficultyLevel } from '@/lib/constants/difficulty';
+import { COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
 
 const ONBOARDING_KEY = '@artspark:onboarding-progress';
 const DEV_PREFS_KEY = '@artspark:dev-preferences';
@@ -31,8 +32,19 @@ const DEFAULT_DEV_PREFS: DevPreferences = {
   subjects: ['botanicals', 'landscapes', 'animals'],
   exclusions: [],
   colorPalettes: [],
-  difficulty: 'intermediate',
+  difficulty: 'developing',
 };
+
+/**
+ * Explorer-level tips for dev mode prompts
+ */
+const EXPLORER_TIPS = [
+  "Tip: Start with light pencil guidelines before adding color.",
+  "Tip: Take a moment to observe your subject before making any marks.",
+  "Tip: Don't worry about perfection — focus on the process and enjoy it!",
+  "Tip: Work from large shapes to small details.",
+  "Tip: Squint at your subject to see the big value patterns.",
+];
 
 /**
  * Load user preferences for dev mode from AsyncStorage
@@ -45,12 +57,21 @@ async function loadDevPreferences(): Promise<DevPreferences> {
     if (progressJson) {
       const progress = JSON.parse(progressJson);
       if (progress.mediums?.length > 0 || progress.subjects?.length > 0) {
+        // Handle legacy difficulty values
+        const legacyMap: Record<string, DifficultyLevel> = {
+          beginner: 'explorer',
+          intermediate: 'developing',
+          advanced: 'confident',
+        };
+        const rawDifficulty = progress.difficulty || 'developing';
+        const difficulty: DifficultyLevel = legacyMap[rawDifficulty] || rawDifficulty;
+
         const prefs: DevPreferences = {
           mediums: progress.mediums || DEFAULT_DEV_PREFS.mediums,
           subjects: progress.subjects || DEFAULT_DEV_PREFS.subjects,
           exclusions: progress.exclusions || [],
           colorPalettes: progress.colorPalettes || [],
-          difficulty: progress.difficulty || 'intermediate',
+          difficulty,
         };
         // Cache for future use
         await AsyncStorage.setItem(DEV_PREFS_KEY, JSON.stringify(prefs));
@@ -76,6 +97,7 @@ function randomItem<T>(arr: T[]): T {
 
 /**
  * Generate a preference-aware mock prompt for dev mode
+ * Now uses skill-aligned template tiers
  */
 function generateDevPrompt(prefs: DevPreferences, source: 'daily' | 'manual'): Prompt {
   const medium = randomItem(prefs.mediums);
@@ -84,29 +106,27 @@ function generateDevPrompt(prefs: DevPreferences, source: 'daily' | 'manual'): P
   const eligible = prefs.subjects.filter(s => !prefs.exclusions.includes(s));
   const subject = randomItem(eligible.length > 0 ? eligible : prefs.subjects);
 
-  // Color rule: ~40% chance if user has palettes
-  const color_rule = prefs.colorPalettes.length > 0 && Math.random() < 0.4
+  // Get difficulty settings with new fields
+  const difficulty = getDifficultyOption(prefs.difficulty);
+
+  // Color rule: chance based on difficulty level
+  const color_rule = prefs.colorPalettes.length > 0 && Math.random() < difficulty.colorRuleChance
     ? randomItem(prefs.colorPalettes)
     : null;
 
   // Twist: chance based on difficulty, medium-compatible
-  const difficulty = getDifficultyOption(prefs.difficulty);
   const compatibleTwists = getTwistsForMedium(medium);
   const twist = Math.random() < difficulty.twistChance && compatibleTwists.length > 0
     ? randomItem(compatibleTwists).text
     : null;
 
-  // Build artistically meaningful prompt text
-  let promptText = getPromptTemplate(medium, subject);
+  // Build artistically meaningful prompt text using skill-aligned templates
+  let promptText = getPromptTemplate(medium, subject, difficulty.templateTier);
+
   if (color_rule) {
-    const colorLabels: Record<string, string> = {
-      'earthy': 'earthy', 'vibrant': 'vibrant', 'monochrome': 'monochrome',
-      'pastels': 'pastel', 'complementary': 'complementary', 'warm': 'warm',
-      'cool': 'cool', 'random-ok': 'any',
-    };
-    const colorLabel = colorLabels[color_rule] || color_rule;
+    const colorLabel = COLOR_PALETTE_OPTIONS.find(c => c.id === color_rule)?.label || color_rule;
     if (color_rule !== 'random-ok') {
-      promptText += `. Work with a ${colorLabel} palette`;
+      promptText += `. Work with a ${colorLabel.toLowerCase()} palette`;
     }
   }
   if (twist) {
@@ -114,6 +134,11 @@ function generateDevPrompt(prefs: DevPreferences, source: 'daily' | 'manual'): P
   }
   if (!promptText.endsWith('.')) {
     promptText += '.';
+  }
+
+  // Append explorer tip for beginner level
+  if (difficulty.id === 'explorer') {
+    promptText += ' ' + randomItem(EXPLORER_TIPS);
   }
 
   return {

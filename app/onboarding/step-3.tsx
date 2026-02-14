@@ -87,7 +87,7 @@ export default function OnboardingStep3() {
   return (
     <OnboardingLayout
       step={3}
-      totalSteps={5}
+      totalSteps={6}
       title="What inspires you?"
       subtitle="Pick subjects you'd love to get prompts about."
       onNext={handleSubmit(onSubmit)}

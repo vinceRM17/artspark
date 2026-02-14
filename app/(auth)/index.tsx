@@ -3,7 +3,7 @@
  *
  * Shows the daily personalized prompt in a large artistic card
  * with botanical decorations, reference images, thumbs up/down
- * feedback, and action buttons.
+ * feedback, tutorial links (for explorer level), and action buttons.
  */
 
 import { useState, useEffect } from 'react';
@@ -17,18 +17,24 @@ import {
   Linking,
   Dimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useDailyPrompt } from '@/lib/hooks/useDailyPrompt';
 import { MEDIUM_OPTIONS, COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
 import { fetchReferenceImages, ReferenceImage } from '@/lib/services/referenceImages';
 import { savePreferences, getPreferences } from '@/lib/services/preferences';
 import { useSession } from '@/components/auth/SessionProvider';
+import { getTutorialLinks, TutorialLink } from '@/lib/constants/mediums';
+import { getDifficultyOption } from '@/lib/constants/difficulty';
+import { TIER_LIMITS, UserTier } from '@/lib/constants/tiers';
+import UpgradePrompt from '@/components/tiers/UpgradePrompt';
 import LeafCorner from '@/components/botanical/LeafCorner';
 import VineDivider from '@/components/botanical/VineDivider';
 import FloatingLeaves from '@/components/botanical/FloatingLeaves';
 import FeedbackModal from '@/components/prompts/FeedbackModal';
 
 const { width: screenWidth } = Dimensions.get('window');
+const FREE_PROMPT_KEY = '@artspark:free-prompt-count';
 
 // Helper to look up display labels from preference IDs
 function getLabel(options: { id: string; label: string }[], id: string): string {
@@ -40,16 +46,66 @@ export default function Home() {
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
-  const [liked, setLiked] = useState<boolean | null>(null); // null = no reaction yet
+  const [liked, setLiked] = useState<boolean | null>(null);
+  const [userTier, setUserTier] = useState<UserTier>('free');
+  const [userDifficulty, setUserDifficulty] = useState<string>('developing');
+  const [freePromptUsed, setFreePromptUsed] = useState(false);
 
   const { session } = useSession();
   const userId = session?.user?.id;
+
+  // Load user tier and difficulty
+  useEffect(() => {
+    async function loadUserInfo() {
+      if (userId) {
+        try {
+          const prefs = await getPreferences(userId);
+          if (prefs) {
+            setUserTier((prefs as any).tier || 'basic');
+            setUserDifficulty(prefs.difficulty || 'developing');
+          }
+        } catch {
+          // Default to basic for authenticated users
+          setUserTier('basic');
+        }
+      } else if (__DEV__) {
+        // Dev mode: load difficulty from AsyncStorage
+        try {
+          const progressJson = await AsyncStorage.getItem('@artspark:onboarding-progress');
+          if (progressJson) {
+            const progress = JSON.parse(progressJson);
+            if (progress.difficulty) setUserDifficulty(progress.difficulty);
+          }
+        } catch {}
+        setUserTier('basic'); // Dev mode gets basic tier features
+      } else {
+        // No auth, no dev = free tier
+        setUserTier('free');
+        // Check if free prompt already used today
+        const today = new Date().toISOString().split('T')[0];
+        const stored = await AsyncStorage.getItem(FREE_PROMPT_KEY);
+        if (stored === today) {
+          setFreePromptUsed(true);
+        }
+      }
+    }
+    loadUserInfo();
+  }, [userId]);
+
+  // Track free tier prompt usage
+  useEffect(() => {
+    if (prompt && userTier === 'free' && !userId) {
+      const today = new Date().toISOString().split('T')[0];
+      AsyncStorage.setItem(FREE_PROMPT_KEY, today);
+      setFreePromptUsed(true);
+    }
+  }, [prompt, userTier, userId]);
 
   // Fetch reference images when prompt changes
   useEffect(() => {
     if (prompt) {
       setImagesLoading(true);
-      setLiked(null); // Reset reaction for new prompt
+      setLiked(null);
       fetchReferenceImages(prompt.subject, prompt.medium, 3)
         .then(setReferenceImages)
         .catch(() => setReferenceImages([]))
@@ -78,7 +134,6 @@ export default function Home() {
 
     if (updatePrefs && prompt) {
       try {
-        // In dev mode, just log what would happen
         if (!userId && __DEV__) {
           console.log('[Dev] Would update preferences:', reasons);
         } else if (userId) {
@@ -87,7 +142,6 @@ export default function Home() {
             const updates: Record<string, any> = {};
 
             if (reasons.includes('subject')) {
-              // Add disliked subject to exclusions
               const currentExclusions = currentPrefs.exclusions || [];
               if (!currentExclusions.includes(prompt.subject)) {
                 updates.exclusions = [...currentExclusions, prompt.subject];
@@ -95,7 +149,6 @@ export default function Home() {
             }
 
             if (reasons.includes('medium')) {
-              // Remove disliked medium from preferred mediums
               const currentMediums = currentPrefs.art_mediums || [];
               updates.art_mediums = currentMediums.filter(
                 (m: string) => m !== prompt.medium
@@ -112,9 +165,18 @@ export default function Home() {
       }
     }
 
-    // Generate a new prompt regardless
     generateManualPrompt();
   };
+
+  // Get tier limits
+  const tierLimits = TIER_LIMITS[userTier];
+
+  // Get tutorial links for current medium (explorer level only)
+  const difficulty = getDifficultyOption(userDifficulty);
+  const tutorials: TutorialLink[] =
+    difficulty.id === 'explorer' && prompt
+      ? getTutorialLinks(prompt.medium)
+      : [];
 
   // Loading state
   if (loading) {
@@ -175,20 +237,18 @@ export default function Home() {
             <LeafCorner position="topRight" size={70} opacity={0.1} />
             <LeafCorner position="bottomLeft" size={55} opacity={0.08} />
 
-            {/* Prompt Text - the main event */}
+            {/* Prompt Text */}
             <Text className="text-2xl font-semibold text-gray-900 leading-relaxed pr-6">
               {prompt.prompt_text}
             </Text>
 
             {/* Details Section */}
             <View className="mt-4 pt-4 border-t border-gray-100">
-              {/* Medium */}
               <View className="mb-3">
                 <Text className="text-xs text-gray-400 mb-1">Medium</Text>
                 <Text className="text-sm text-gray-700">{mediumLabel}</Text>
               </View>
 
-              {/* Color Rule (if present) */}
               {colorLabel && (
                 <View className="mb-3">
                   <Text className="text-xs text-gray-400 mb-1">Colors</Text>
@@ -196,7 +256,6 @@ export default function Home() {
                 </View>
               )}
 
-              {/* Twist (if present) */}
               {prompt.twist && (
                 <View>
                   <Text className="text-xs text-gray-400 mb-1">Twist</Text>
@@ -257,6 +316,27 @@ export default function Home() {
             </View>
           </View>
 
+          {/* Learning Resources (Explorer level only) */}
+          {tutorials.length > 0 && (
+            <View className="bg-[#F0F5EE] rounded-xl p-4 mb-4">
+              <Text className="text-xs text-[#5A7A50] font-semibold uppercase tracking-wider mb-3">
+                Learning Resources
+              </Text>
+              {tutorials.map((link, i) => (
+                <TouchableOpacity
+                  key={i}
+                  onPress={() => Linking.openURL(link.url)}
+                  className="flex-row items-center py-2"
+                >
+                  <Text className="text-[#7C9A72] mr-2">{'>'}</Text>
+                  <Text className="text-sm text-[#5A7A50] underline flex-1">
+                    {link.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
           {/* Reference Images Section */}
           {(referenceImages.length > 0 || imagesLoading) && (
             <View className="mb-6">
@@ -305,33 +385,48 @@ export default function Home() {
 
           {/* Action Buttons */}
           <View className="mt-4">
-            {/* I made something */}
-            <TouchableOpacity
-              className="bg-[#7C9A72] rounded-xl py-4 mb-3"
-              onPress={() => {
-                if (prompt) {
-                  router.push({
-                    pathname: '/(auth)/respond',
-                    params: { prompt_id: prompt.id, prompt_text: prompt.prompt_text }
-                  });
-                }
-              }}
-            >
-              <Text className="text-white text-center text-lg font-semibold">
-                I made something
-              </Text>
-            </TouchableOpacity>
+            {/* Add to My Portfolio (hidden for free tier) */}
+            {tierLimits.canSavePhotos ? (
+              <TouchableOpacity
+                className="bg-[#7C9A72] rounded-xl py-4 mb-3"
+                onPress={() => {
+                  if (prompt) {
+                    router.push({
+                      pathname: '/(auth)/respond',
+                      params: { prompt_id: prompt.id, prompt_text: prompt.prompt_text }
+                    });
+                  }
+                }}
+              >
+                <Text className="text-white text-center text-lg font-semibold">
+                  Add to My Portfolio
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <UpgradePrompt context="portfolio" />
+            )}
 
             {/* Generate New */}
-            <TouchableOpacity
-              className="bg-white border-2 border-[#7C9A72] rounded-xl py-4"
-              onPress={generateManualPrompt}
-              disabled={generating}
-            >
-              <Text className="text-[#7C9A72] text-center text-lg font-semibold">
-                {generating ? 'Generating...' : 'Generate New'}
-              </Text>
-            </TouchableOpacity>
+            {userTier === 'free' && freePromptUsed && !__DEV__ ? (
+              <View className="bg-gray-200 rounded-xl py-4 mb-3">
+                <Text className="text-gray-500 text-center text-lg font-semibold">
+                  Generate New
+                </Text>
+                <Text className="text-gray-400 text-center text-xs mt-1">
+                  Upgrade to unlock more prompts
+                </Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                className="bg-white border-2 border-[#7C9A72] rounded-xl py-4"
+                onPress={generateManualPrompt}
+                disabled={generating}
+              >
+                <Text className="text-[#7C9A72] text-center text-lg font-semibold">
+                  {generating ? 'Generating...' : 'Generate New'}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {/* View History */}
             <TouchableOpacity
@@ -356,7 +451,7 @@ export default function Home() {
         </View>
       </ScrollView>
 
-      {/* Feedback Modal - outside ScrollView */}
+      {/* Feedback Modal */}
       <FeedbackModal
         visible={feedbackVisible}
         prompt={prompt}

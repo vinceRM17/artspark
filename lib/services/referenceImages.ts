@@ -5,6 +5,8 @@
  * Uses Wikimedia Commons search API (free, no key needed) to find
  * actual photographs — NOT artwork, but real subjects in natural form.
  * Falls back to Unsplash if configured.
+ *
+ * Tracks previously shown image IDs per session to avoid repeats.
  */
 
 const UNSPLASH_ACCESS_KEY = process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY;
@@ -16,6 +18,20 @@ export type ReferenceImage = {
   photographer: string;
   alt: string;
 };
+
+// Track seen image IDs per session to avoid repeats
+let seenImageIds = new Set<string>();
+let currentSubject: string | null = null;
+
+/**
+ * Reset seen images when subject changes
+ */
+function resetIfSubjectChanged(subject: string) {
+  if (subject !== currentSubject) {
+    seenImageIds = new Set();
+    currentSubject = subject;
+  }
+}
 
 // Photo search queries — specific enough for relevant photos, with variants for variety
 const SUBJECT_QUERIES: Record<string, string[]> = {
@@ -46,11 +62,14 @@ async function fetchFromWikimediaCommons(
   // Random offset for variety
   const offset = Math.floor(Math.random() * 20);
 
+  // Fetch extra to account for filtering out seen images
+  const fetchCount = count + seenImageIds.size + 6;
+
   const params = new URLSearchParams({
     action: 'query',
     generator: 'search',
     gsrsearch: query,
-    gsrlimit: String(count + 4),
+    gsrlimit: String(fetchCount),
     gsroffset: String(offset),
     gsrnamespace: '6', // File namespace only
     prop: 'imageinfo',
@@ -75,6 +94,11 @@ async function fetchFromWikimediaCommons(
   for (const page of Object.values(pages) as any[]) {
     if (results.length >= count) break;
 
+    const pageId = String(page.pageid);
+
+    // Skip previously shown images
+    if (seenImageIds.has(pageId)) continue;
+
     const info = page.imageinfo?.[0];
     if (!info) continue;
 
@@ -88,12 +112,15 @@ async function fetchFromWikimediaCommons(
       ?.substring(0, 40) || 'Wikimedia Commons';
 
     results.push({
-      id: String(page.pageid),
+      id: pageId,
       url: info.thumburl || info.url,
       thumbUrl: info.thumburl || info.url,
       photographer: artist,
       alt: page.title?.replace('File:', '').replace(/\.[^.]+$/, '') || 'Reference photo',
     });
+
+    // Mark as seen
+    seenImageIds.add(pageId);
   }
 
   return results;
@@ -110,31 +137,46 @@ async function fetchFromUnsplash(
   const query = queries[Math.floor(Math.random() * queries.length)];
 
   const response = await fetch(
-    `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&orientation=landscape&content_filter=high`,
+    `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count + 4}&orientation=landscape&content_filter=high`,
     { headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` } }
   );
 
   if (!response.ok) return [];
 
   const data = await response.json();
-  return (data.results || []).map((photo: any) => ({
-    id: photo.id,
-    url: photo.urls.small,
-    thumbUrl: photo.urls.thumb,
-    photographer: photo.user.name,
-    alt: photo.alt_description || query,
-  }));
+  const results: ReferenceImage[] = [];
+
+  for (const photo of data.results || []) {
+    if (results.length >= count) break;
+    if (seenImageIds.has(photo.id)) continue;
+
+    results.push({
+      id: photo.id,
+      url: photo.urls.small,
+      thumbUrl: photo.urls.thumb,
+      photographer: photo.user.name,
+      alt: photo.alt_description || query,
+    });
+
+    seenImageIds.add(photo.id);
+  }
+
+  return results;
 }
 
 /**
  * Fetch reference photos for a prompt
  * Returns real photographs of the subject matter for artist reference
+ * Automatically deduplicates across calls within the same subject
  */
 export async function fetchReferenceImages(
   subject: string,
   _medium: string,
   count: number = 3
 ): Promise<ReferenceImage[]> {
+  // Reset tracking if subject changed
+  resetIfSubjectChanged(subject);
+
   // Try Unsplash first if key is available
   if (UNSPLASH_ACCESS_KEY) {
     try {

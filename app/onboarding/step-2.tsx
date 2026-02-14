@@ -6,10 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import OnboardingLayout from '@/components/onboarding/OnboardingLayout';
-import ChipGrid from '@/components/onboarding/ChipGrid';
 import { step2Schema } from '@/lib/schemas/onboarding';
 import { COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
 import { DIFFICULTY_OPTIONS, DifficultyLevel } from '@/lib/constants/difficulty';
+import { PALETTE_INFO } from '@/lib/constants/palettes';
 
 type Step2Data = {
   colorPalettes?: string[];
@@ -19,21 +19,25 @@ const STORAGE_KEY = '@artspark:onboarding-progress';
 
 /**
  * Onboarding Step 2: Difficulty Level + Color Palette Preferences
- * Difficulty is required, color palettes are optional
+ * Difficulty is required, color palettes are optional.
+ * Shows visual palette swatch previews and explorer callout.
  */
 export default function OnboardingStep2() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>('intermediate');
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('developing');
 
   const {
     control,
     handleSubmit,
     setValue,
+    watch,
   } = useForm<Step2Data>({
     resolver: zodResolver(step2Schema),
     defaultValues: { colorPalettes: [] },
   });
+
+  const selectedPalettes = watch('colorPalettes') || [];
 
   // Load existing progress on mount
   useEffect(() => {
@@ -46,7 +50,13 @@ export default function OnboardingStep2() {
             setValue('colorPalettes', progress.colorPalettes);
           }
           if (progress.difficulty) {
-            setDifficulty(progress.difficulty);
+            // Handle legacy values
+            const legacyMap: Record<string, DifficultyLevel> = {
+              beginner: 'explorer',
+              intermediate: 'developing',
+              advanced: 'confident',
+            };
+            setDifficulty(legacyMap[progress.difficulty] || progress.difficulty);
           }
         }
       } catch (error) {
@@ -91,7 +101,7 @@ export default function OnboardingStep2() {
   return (
     <OnboardingLayout
       step={2}
-      totalSteps={5}
+      totalSteps={6}
       title="Tell us about yourself"
       subtitle="This helps us tailor prompts to your experience level."
       onNext={handleSubmit(onSubmit)}
@@ -103,7 +113,7 @@ export default function OnboardingStep2() {
       <Text className="text-sm font-semibold text-gray-700 mb-3">
         Skill Level
       </Text>
-      <View className="mb-6">
+      <View className="mb-4">
         {DIFFICULTY_OPTIONS.map((option) => {
           const selected = difficulty === option.id;
           return (
@@ -130,7 +140,16 @@ export default function OnboardingStep2() {
         })}
       </View>
 
-      {/* Color palettes */}
+      {/* Explorer callout */}
+      {difficulty === 'explorer' && (
+        <View className="bg-[#F0F5EE] rounded-xl p-4 mb-4 border border-[#7C9A72]/20">
+          <Text className="text-sm text-[#5A7A50] font-medium">
+            We'll include helpful tips and tutorials in your prompts!
+          </Text>
+        </View>
+      )}
+
+      {/* Color palettes with visual swatches */}
       <Text className="text-sm font-semibold text-gray-700 mb-3">
         Color Preferences (optional)
       </Text>
@@ -139,17 +158,64 @@ export default function OnboardingStep2() {
         name="colorPalettes"
         render={({ field }) => (
           <View>
-            <ChipGrid
-              options={COLOR_PALETTE_OPTIONS}
-              selectedIds={field.value || []}
-              onToggle={(id) => {
-                const current = field.value || [];
-                const newValue = current.includes(id)
-                  ? current.filter((paletteId) => paletteId !== id)
-                  : [...current, id];
-                field.onChange(newValue);
-              }}
-            />
+            {COLOR_PALETTE_OPTIONS.map((option) => {
+              const palette = PALETTE_INFO[option.id];
+              const selected = (field.value || []).includes(option.id);
+
+              return (
+                <TouchableOpacity
+                  key={option.id}
+                  onPress={() => {
+                    const current = field.value || [];
+                    const newValue = current.includes(option.id)
+                      ? current.filter((id) => id !== option.id)
+                      : [...current, option.id];
+                    field.onChange(newValue);
+                  }}
+                  className="mb-2 rounded-xl border p-4"
+                  style={{
+                    borderColor: selected ? '#7C9A72' : '#E5E7EB',
+                    backgroundColor: selected ? '#F0F5EE' : '#FFFFFF',
+                  }}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1 mr-3">
+                      <Text
+                        className="font-semibold text-base"
+                        style={{ color: selected ? '#7C9A72' : '#374151' }}
+                      >
+                        {option.label}
+                      </Text>
+                      {palette && (
+                        <Text className="text-xs text-gray-400 mt-1">
+                          {palette.description}
+                        </Text>
+                      )}
+                    </View>
+
+                    {/* Color swatch dots */}
+                    {palette && (
+                      <View className="flex-row items-center">
+                        {palette.hexColors.map((hex, i) => (
+                          <View
+                            key={i}
+                            style={{
+                              width: 20,
+                              height: 20,
+                              borderRadius: 999,
+                              backgroundColor: hex,
+                              marginLeft: i > 0 ? -4 : 0,
+                              borderWidth: 1.5,
+                              borderColor: '#FFFFFF',
+                            }}
+                          />
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
       />
