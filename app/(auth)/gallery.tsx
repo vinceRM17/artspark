@@ -2,6 +2,7 @@
  * Progress Gallery screen
  *
  * Displays a grid of all user artwork submissions with filter options.
+ * Includes calendar heatmap showing activity over the last 90 days.
  * Tap an image to view its prompt detail.
  */
 
@@ -19,7 +20,11 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useGallery } from '@/lib/hooks/useGallery';
+import { useActivityDates } from '@/lib/hooks/useActivityDates';
 import { MEDIUM_OPTIONS, SUBJECT_OPTIONS } from '@/lib/constants/preferences';
+import { useTheme } from '@/lib/theme/ThemeContext';
+import CalendarHeatmap from '@/components/activity/CalendarHeatmap';
+import ShareModal from '@/components/share/ShareModal';
 import type { GalleryItem } from '@/lib/services/gallery';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -31,13 +36,16 @@ const ITEM_WIDTH = (screenWidth - GRID_PADDING * 2 - GRID_GAP) / 2;
 const GalleryTile = memo<{
   item: GalleryItem;
   onPress: (promptId: string) => void;
+  onShare: (item: GalleryItem) => void;
+  colors: any;
 }>(
-  ({ item, onPress }) => {
+  ({ item, onPress, onShare, colors }) => {
     const mediumLabel = MEDIUM_OPTIONS.find(m => m.id === item.medium)?.label || item.medium;
 
     return (
       <TouchableOpacity
         onPress={() => onPress(item.prompt_id)}
+        onLongPress={() => onShare(item)}
         activeOpacity={0.8}
         style={{ width: ITEM_WIDTH, marginBottom: GRID_GAP }}
       >
@@ -50,10 +58,10 @@ const GalleryTile = memo<{
           }}
           resizeMode="cover"
         />
-        <Text className="text-xs text-gray-500 mt-1" numberOfLines={1}>
+        <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }} numberOfLines={1}>
           {mediumLabel}
         </Text>
-        <Text className="text-[10px] text-gray-400" numberOfLines={1}>
+        <Text style={{ fontSize: 10, color: colors.textMuted }} numberOfLines={1}>
           {new Date(item.created_at).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -72,16 +80,18 @@ function FilterChip({
   label,
   selected,
   onPress,
+  colors,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
+  colors: any;
 }) {
   return (
     <TouchableOpacity
       onPress={onPress}
       style={{
-        backgroundColor: selected ? '#7C9A72' : '#F3F4F6',
+        backgroundColor: selected ? colors.primary : colors.inputBg,
         borderRadius: 20,
         paddingHorizontal: 14,
         paddingVertical: 6,
@@ -90,7 +100,7 @@ function FilterChip({
     >
       <Text
         style={{
-          color: selected ? '#FFFFFF' : '#6B7280',
+          color: selected ? '#FFFFFF' : colors.textSecondary,
           fontSize: 13,
           fontWeight: selected ? '600' : '400',
         }}
@@ -103,11 +113,18 @@ function FilterChip({
 
 export default function GalleryScreen() {
   const { items, loading, error, hasMore, filters, setFilters, loadMore, refresh } = useGallery();
+  const { dates: activityDates, loading: activityLoading } = useActivityDates();
+  const { colors } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [shareItem, setShareItem] = useState<GalleryItem | null>(null);
 
   const handlePress = useCallback((promptId: string) => {
     router.push(`/(auth)/history/${promptId}`);
+  }, []);
+
+  const handleShare = useCallback((item: GalleryItem) => {
+    setShareItem(item);
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -124,9 +141,9 @@ export default function GalleryScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: GalleryItem }) => (
-      <GalleryTile item={item} onPress={handlePress} />
+      <GalleryTile item={item} onPress={handlePress} onShare={handleShare} colors={colors} />
     ),
-    [handlePress]
+    [handlePress, handleShare, colors]
   );
 
   const toggleMediumFilter = useCallback(
@@ -158,8 +175,8 @@ export default function GalleryScreen() {
   // Loading state
   if (loading && items.length === 0) {
     return (
-      <View className="flex-1 bg-[#FFF8F0] justify-center items-center">
-        <ActivityIndicator size="large" color="#7C9A72" />
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -167,13 +184,13 @@ export default function GalleryScreen() {
   // Error state
   if (error) {
     return (
-      <View className="flex-1 bg-[#FFF8F0] justify-center items-center px-6">
-        <Text className="text-red-600 text-center mb-4">{error}</Text>
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 }}>
+        <Text style={{ color: colors.error, textAlign: 'center', marginBottom: 16 }}>{error}</Text>
         <TouchableOpacity
-          className="bg-[#7C9A72] rounded-xl py-3 px-6"
+          style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 24 }}
           onPress={handleRefresh}
         >
-          <Text className="text-white text-center font-semibold">Try Again</Text>
+          <Text style={{ color: '#FFFFFF', textAlign: 'center', fontWeight: '600' }}>Try Again</Text>
         </TouchableOpacity>
       </View>
     );
@@ -182,36 +199,36 @@ export default function GalleryScreen() {
   // Empty state
   if (items.length === 0 && !hasActiveFilters) {
     return (
-      <View className="flex-1 bg-[#FFF8F0] justify-center items-center px-6">
-        <Text style={{ fontSize: 48 }} className="mb-4">{'🎨'}</Text>
-        <Text className="text-gray-900 text-xl font-semibold mb-2">Your gallery is empty</Text>
-        <Text className="text-gray-600 text-center mb-6">
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 }}>
+        <Text style={{ fontSize: 48, marginBottom: 16 }}>{'\uD83C\uDFA8'}</Text>
+        <Text style={{ color: colors.text, fontSize: 20, fontWeight: '600', marginBottom: 8 }}>Your gallery is empty</Text>
+        <Text style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }}>
           Complete a prompt and add photos to start building your gallery.
         </Text>
         <TouchableOpacity
-          className="bg-[#7C9A72] rounded-xl py-3 px-6"
+          style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 24 }}
           onPress={() => router.push('/(auth)')}
         >
-          <Text className="text-white text-center font-semibold">Go to Today's Prompt</Text>
+          <Text style={{ color: '#FFFFFF', textAlign: 'center', fontWeight: '600' }}>Go to Today's Prompt</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-[#FFF8F0]">
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Filter toggle */}
-      <View className="px-4 pt-3 pb-1">
-        <View className="flex-row items-center justify-between">
+      <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <TouchableOpacity onPress={() => setShowFilters(!showFilters)}>
-            <Text className="text-[#7C9A72] font-medium text-sm">
+            <Text style={{ color: colors.primary, fontWeight: '500', fontSize: 14 }}>
               {showFilters ? 'Hide Filters' : 'Filter'}
               {hasActiveFilters ? ' (active)' : ''}
             </Text>
           </TouchableOpacity>
           {hasActiveFilters && (
             <TouchableOpacity onPress={clearFilters}>
-              <Text className="text-gray-400 text-sm">Clear</Text>
+              <Text style={{ color: colors.textMuted, fontSize: 14 }}>Clear</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -219,20 +236,21 @@ export default function GalleryScreen() {
 
       {/* Filter chips */}
       {showFilters && (
-        <View className="px-4 pb-3">
-          <Text className="text-xs text-gray-400 mb-2">Medium</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
+        <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+          <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 8 }}>Medium</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
             {MEDIUM_OPTIONS.map(m => (
               <FilterChip
                 key={m.id}
                 label={m.label}
                 selected={filters.medium === m.id}
                 onPress={() => toggleMediumFilter(m.id)}
+                colors={colors}
               />
             ))}
           </ScrollView>
 
-          <Text className="text-xs text-gray-400 mb-2">Subject</Text>
+          <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 8 }}>Subject</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {SUBJECT_OPTIONS.map(s => (
               <FilterChip
@@ -240,6 +258,7 @@ export default function GalleryScreen() {
                 label={s.label}
                 selected={filters.subject === s.id}
                 onPress={() => toggleSubjectFilter(s.id)}
+                colors={colors}
               />
             ))}
           </ScrollView>
@@ -248,12 +267,12 @@ export default function GalleryScreen() {
 
       {/* Empty filtered state */}
       {items.length === 0 && hasActiveFilters ? (
-        <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-gray-600 text-center mb-4">
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 }}>
+          <Text style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: 16 }}>
             No artwork matches these filters.
           </Text>
           <TouchableOpacity onPress={clearFilters}>
-            <Text className="text-[#7C9A72] font-medium">Clear Filters</Text>
+            <Text style={{ color: colors.primary, fontWeight: '500' }}>Clear Filters</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -275,25 +294,42 @@ export default function GalleryScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor="#7C9A72"
+              tintColor={colors.primary}
             />
           }
           ListHeaderComponent={
-            <View className="px-4 pt-2 pb-3">
-              <Text className="text-2xl font-bold text-gray-900">My Gallery</Text>
-              <Text className="text-sm text-gray-500 mt-1">
+            <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 }}>
+              <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text }}>My Gallery</Text>
+              <Text style={{ fontSize: 14, color: colors.textSecondary, marginTop: 4 }}>
                 {items.length} {items.length === 1 ? 'piece' : 'pieces'}
               </Text>
+
+              {/* Calendar Heatmap */}
+              {!activityLoading && activityDates.length > 0 && (
+                <View style={{ marginTop: 16 }}>
+                  <CalendarHeatmap activityDates={activityDates} />
+                </View>
+              )}
             </View>
           }
           ListFooterComponent={
             loading && items.length > 0 ? (
-              <View className="py-4">
-                <ActivityIndicator color="#7C9A72" />
+              <View style={{ paddingVertical: 16 }}>
+                <ActivityIndicator color={colors.primary} />
               </View>
             ) : null
           }
           contentContainerStyle={{ paddingBottom: 20 }}
+        />
+      )}
+
+      {/* Share Modal */}
+      {shareItem && (
+        <ShareModal
+          visible={!!shareItem}
+          onClose={() => setShareItem(null)}
+          promptText={shareItem.prompt_text}
+          imageUri={shareItem.image_url}
         />
       )}
     </View>

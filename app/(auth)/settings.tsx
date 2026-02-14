@@ -39,10 +39,18 @@ import SettingRow from '@/components/settings/SettingRow';
 import NotificationTimePicker from '@/components/settings/NotificationTimePicker';
 import DangerZone from '@/components/settings/DangerZone';
 import ChipGrid from '@/components/onboarding/ChipGrid';
+import { useTheme, type ThemeMode } from '@/lib/theme/ThemeContext';
+
+const THEME_OPTIONS: { id: ThemeMode; label: string; description: string }[] = [
+  { id: 'light', label: 'Light', description: 'Always use light mode' },
+  { id: 'dark', label: 'Dark', description: 'Always use dark mode' },
+  { id: 'system', label: 'System', description: 'Follow your device settings' },
+];
 
 export default function Settings() {
   const { session, signOut } = useSession();
   const userId = session?.user?.id || (__DEV__ ? 'dev-user' : '');
+  const { colors, mode: themeMode, setMode: setThemeMode } = useTheme();
 
   // State
   const [loading, setLoading] = useState(true);
@@ -442,6 +450,50 @@ export default function Settings() {
             />
           }
         />
+      </SettingSection>
+
+      {/* Section: Appearance */}
+      <SettingSection title="Appearance">
+        <SettingRow
+          label="Theme"
+          description={THEME_OPTIONS.find(t => t.id === themeMode)?.label || 'Light'}
+          onPress={() =>
+            setEditingSection(editingSection === 'appearance' ? null : 'appearance')
+          }
+          rightElement={
+            <Text className="text-gray-400 text-sm">
+              {editingSection === 'appearance' ? 'Close' : 'Change'}
+            </Text>
+          }
+        />
+        {editingSection === 'appearance' && (
+          <View className="px-4 py-3 bg-gray-50">
+            {THEME_OPTIONS.map((option) => {
+              const selected = themeMode === option.id;
+              return (
+                <TouchableOpacity
+                  key={option.id}
+                  onPress={() => setThemeMode(option.id)}
+                  className="mb-2 rounded-xl border p-4"
+                  style={{
+                    borderColor: selected ? '#7C9A72' : '#E5E7EB',
+                    backgroundColor: selected ? '#F0F5EE' : '#FFFFFF',
+                  }}
+                >
+                  <Text
+                    className="font-semibold text-base"
+                    style={{ color: selected ? '#7C9A72' : '#374151' }}
+                  >
+                    {option.label}
+                  </Text>
+                  <Text className="text-xs text-gray-400 mt-1">
+                    {option.description}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
       </SettingSection>
 
       {/* Section 2: Skill Level (4 tiers) */}

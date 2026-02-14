@@ -2,10 +2,22 @@
  * Streak counter badge for home screen
  *
  * Shows current streak with flame icon and longest streak.
- * Highlights milestone achievements.
+ * Highlights milestone achievements with slide-down animation.
+ * Streak number counts up from 0 on mount.
  */
 
+import { useEffect } from 'react';
 import { View, Text } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withDelay,
+  useDerivedValue,
+  useAnimatedProps,
+} from 'react-native-reanimated';
+import { hapticSuccess } from '@/lib/utils/haptics';
 import type { StreakData } from '@/lib/services/streaks';
 
 const MILESTONES = [7, 14, 30, 60, 100];
@@ -27,6 +39,40 @@ export default function StreakCounter({ streak }: StreakCounterProps) {
   const { currentStreak, longestStreak } = streak;
   const milestone = getMilestoneMessage(currentStreak);
   const isOnFire = currentStreak >= 3;
+
+  // Animated streak number
+  const animatedStreak = useSharedValue(0);
+  const displayStreak = useDerivedValue(() =>
+    Math.round(animatedStreak.value)
+  );
+
+  // Milestone slide-in
+  const milestoneOpacity = useSharedValue(0);
+  const milestoneTranslateY = useSharedValue(-20);
+
+  useEffect(() => {
+    // Count up animation
+    animatedStreak.value = withTiming(currentStreak, { duration: 800 });
+
+    // Milestone slide-in
+    if (milestone) {
+      milestoneOpacity.value = withDelay(600, withTiming(1, { duration: 400 }));
+      milestoneTranslateY.value = withDelay(
+        600,
+        withSpring(0, { damping: 14 })
+      );
+
+      // Haptic on milestone
+      if (MILESTONES.includes(currentStreak)) {
+        setTimeout(() => hapticSuccess(), 700);
+      }
+    }
+  }, [currentStreak]);
+
+  const milestoneStyle = useAnimatedStyle(() => ({
+    opacity: milestoneOpacity.value,
+    transform: [{ translateY: milestoneTranslateY.value }],
+  }));
 
   return (
     <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
@@ -62,13 +108,16 @@ export default function StreakCounter({ streak }: StreakCounterProps) {
         </View>
       </View>
 
-      {/* Milestone callout */}
+      {/* Milestone callout with slide-in animation */}
       {milestone && (
-        <View className="mt-3 bg-[#F0F5EE] rounded-lg py-2 px-3">
+        <Animated.View
+          style={milestoneStyle}
+          className="mt-3 bg-[#F0F5EE] rounded-lg py-2 px-3"
+        >
           <Text className="text-sm text-[#5A7A50] text-center font-medium">
             {milestone}
           </Text>
-        </View>
+        </Animated.View>
       )}
     </View>
   );

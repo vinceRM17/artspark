@@ -36,6 +36,9 @@ import StreakCounter from '@/components/streaks/StreakCounter';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
 import { useStreak } from '@/lib/hooks/useStreak';
 import { useChallenges } from '@/lib/hooks/useChallenges';
+import { useBadges } from '@/lib/hooks/useBadges';
+import { useTheme } from '@/lib/theme/ThemeContext';
+import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/utils/haptics';
 
 const { width: screenWidth } = Dimensions.get('window');
 const FREE_PROMPT_KEY = '@artspark:free-prompt-count';
@@ -49,6 +52,8 @@ export default function Home() {
   const { prompt, loading, error, generating, generateManualPrompt } = useDailyPrompt();
   const { streak, loading: streakLoading } = useStreak();
   const { active: activeChallenges } = useChallenges();
+  const { unlockedCount, totalCount } = useBadges();
+  const { colors } = useTheme();
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
@@ -121,12 +126,14 @@ export default function Home() {
 
   // Handle thumbs up
   const handleThumbsUp = () => {
+    hapticLight();
     setLiked(true);
   };
 
   // Handle thumbs down - show feedback modal
   const handleThumbsDown = () => {
     if (!prompt) return;
+    hapticLight();
     setFeedbackVisible(true);
   };
 
@@ -187,10 +194,10 @@ export default function Home() {
   // Loading state
   if (loading) {
     return (
-      <View className="flex-1 bg-[#FFF8F0] justify-center items-center">
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
         <FloatingLeaves width={screenWidth} height={600} />
-        <ActivityIndicator size="large" color="#7C9A72" />
-        <Text className="text-gray-400 mt-4 text-sm">Preparing your prompt...</Text>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ color: colors.textMuted, marginTop: 16, fontSize: 14 }}>Preparing your prompt...</Text>
       </View>
     );
   }
@@ -198,13 +205,13 @@ export default function Home() {
   // Error state
   if (error) {
     return (
-      <View className="flex-1 bg-[#FFF8F0] justify-center items-center px-6">
-        <Text className="text-red-600 text-center mb-4">{error}</Text>
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 }}>
+        <Text style={{ color: colors.error, textAlign: 'center', marginBottom: 16 }}>{error}</Text>
         <TouchableOpacity
-          className="bg-[#7C9A72] rounded-xl py-3 px-6"
+          style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 24 }}
           onPress={() => router.replace('/(auth)')}
         >
-          <Text className="text-white text-center font-semibold">Try Again</Text>
+          <Text style={{ color: '#FFFFFF', textAlign: 'center', fontWeight: '600' }}>Try Again</Text>
         </TouchableOpacity>
       </View>
     );
@@ -213,8 +220,8 @@ export default function Home() {
   // No prompt state
   if (!prompt) {
     return (
-      <View className="flex-1 bg-[#FFF8F0] justify-center items-center px-6">
-        <Text className="text-gray-600 text-center">No prompt available</Text>
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 }}>
+        <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>No prompt available</Text>
       </View>
     );
   }
@@ -225,15 +232,15 @@ export default function Home() {
 
   return (
     <>
-      <ScrollView className="flex-1 bg-[#FFF8F0]">
-        <View className="px-6 pt-8 pb-8">
+      <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={{ paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32 }}>
           {/* Header with botanical accent */}
-          <View className="items-center mb-6">
-            <Text className="text-[#7C9A72] text-center text-lg font-semibold tracking-wider">
+          <View style={{ alignItems: 'center', marginBottom: 24 }}>
+            <Text style={{ color: colors.primary, textAlign: 'center', fontSize: 18, fontWeight: '600', letterSpacing: 2 }}>
               ArtSpark
             </Text>
             <VineDivider width={140} />
-            <Text className="text-gray-400 text-center text-xs mt-1">
+            <Text style={{ color: colors.textMuted, textAlign: 'center', fontSize: 12, marginTop: 4 }}>
               {prompt.source === 'daily' ? "Today's Prompt" : 'Extra Prompt'}
             </Text>
           </View>
@@ -241,52 +248,85 @@ export default function Home() {
           {/* Streak Counter */}
           {!streakLoading && <StreakCounter streak={streak} />}
 
+          {/* Badges Summary Chip */}
+          <TouchableOpacity
+            onPress={() => {
+              hapticLight();
+              router.push('/(auth)/badges');
+            }}
+            style={{
+              backgroundColor: colors.surface,
+              borderRadius: 12,
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              marginBottom: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ fontSize: 18, marginRight: 8 }}>{'\u2728'}</Text>
+              <Text style={{ fontSize: 14, fontWeight: '500', color: colors.text }}>
+                {unlockedCount} of {totalCount} unlocked
+              </Text>
+            </View>
+            <Text style={{ color: colors.primary, fontSize: 13, fontWeight: '500' }}>
+              View All
+            </Text>
+          </TouchableOpacity>
+
           {/* Active Challenge Card */}
           {activeChallenges.length > 0 && (
             <ChallengeCard activeChallenge={activeChallenges[0]} />
           )}
 
           {/* Main Prompt Card with leaf corners */}
-          <View className="bg-white rounded-2xl p-6 shadow-sm mb-4 overflow-hidden">
+          <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 24, marginBottom: 16, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2 }}>
             <LeafCorner position="topRight" size={70} opacity={0.1} />
             <LeafCorner position="bottomLeft" size={55} opacity={0.08} />
 
             {/* Prompt Text */}
-            <Text className="text-2xl font-semibold text-gray-900 leading-relaxed pr-6">
+            <Text style={{ fontSize: 24, fontWeight: '600', color: colors.text, lineHeight: 34, paddingRight: 24 }}>
               {prompt.prompt_text}
             </Text>
 
             {/* Details Section */}
-            <View className="mt-4 pt-4 border-t border-gray-100">
-              <View className="mb-3">
-                <Text className="text-xs text-gray-400 mb-1">Medium</Text>
-                <Text className="text-sm text-gray-700">{mediumLabel}</Text>
+            <View style={{ marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border }}>
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>Medium</Text>
+                <Text style={{ fontSize: 14, color: colors.textSecondary }}>{mediumLabel}</Text>
               </View>
 
               {colorLabel && (
-                <View className="mb-3">
-                  <Text className="text-xs text-gray-400 mb-1">Colors</Text>
-                  <Text className="text-sm text-gray-700">{colorLabel}</Text>
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>Colors</Text>
+                  <Text style={{ fontSize: 14, color: colors.textSecondary }}>{colorLabel}</Text>
                 </View>
               )}
 
               {prompt.twist && (
                 <View>
-                  <Text className="text-xs text-gray-400 mb-1">Twist</Text>
-                  <Text className="text-sm text-[#7C9A72] italic">{prompt.twist}</Text>
+                  <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>Twist</Text>
+                  <Text style={{ fontSize: 14, color: colors.primary, fontStyle: 'italic' }}>{prompt.twist}</Text>
                 </View>
               )}
             </View>
 
             {/* Thumbs Up / Down Row */}
-            <View className="flex-row items-center justify-center mt-5 pt-4 border-t border-gray-100">
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border }}>
               <TouchableOpacity
                 onPress={handleThumbsUp}
-                className="flex-row items-center rounded-full mr-4"
                 style={{
-                  backgroundColor: liked === true ? '#F0F5EE' : '#F9FAFB',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  borderRadius: 999,
+                  marginRight: 16,
+                  backgroundColor: liked === true ? colors.primaryLight : colors.inputBg,
                   borderWidth: 1,
-                  borderColor: liked === true ? '#7C9A72' : '#E5E7EB',
+                  borderColor: liked === true ? colors.primary : colors.border,
                   paddingHorizontal: 24,
                   paddingVertical: 8,
                 }}
@@ -297,7 +337,7 @@ export default function Home() {
                     marginLeft: 8,
                     fontSize: 14,
                     fontWeight: '500',
-                    color: liked === true ? '#7C9A72' : '#9CA3AF',
+                    color: liked === true ? colors.primary : colors.textMuted,
                   }}
                 >
                   Love it
@@ -306,11 +346,13 @@ export default function Home() {
 
               <TouchableOpacity
                 onPress={handleThumbsDown}
-                className="flex-row items-center rounded-full"
                 style={{
-                  backgroundColor: liked === false ? '#FEF2F2' : '#F9FAFB',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  borderRadius: 999,
+                  backgroundColor: liked === false ? '#FEF2F2' : colors.inputBg,
                   borderWidth: 1,
-                  borderColor: liked === false ? '#EF4444' : '#E5E7EB',
+                  borderColor: liked === false ? colors.error : colors.border,
                   paddingHorizontal: 24,
                   paddingVertical: 8,
                 }}
@@ -321,7 +363,7 @@ export default function Home() {
                     marginLeft: 8,
                     fontSize: 14,
                     fontWeight: '500',
-                    color: liked === false ? '#EF4444' : '#9CA3AF',
+                    color: liked === false ? colors.error : colors.textMuted,
                   }}
                 >
                   Not for me
@@ -332,18 +374,18 @@ export default function Home() {
 
           {/* Learning Resources (Explorer level only) */}
           {tutorials.length > 0 && (
-            <View className="bg-[#F0F5EE] rounded-xl p-4 mb-4">
-              <Text className="text-xs text-[#5A7A50] font-semibold uppercase tracking-wider mb-3">
+            <View style={{ backgroundColor: colors.primaryLight, borderRadius: 12, padding: 16, marginBottom: 16 }}>
+              <Text style={{ fontSize: 12, color: '#5A7A50', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
                 Learning Resources
               </Text>
               {tutorials.map((link, i) => (
                 <TouchableOpacity
                   key={i}
                   onPress={() => Linking.openURL(link.url)}
-                  className="flex-row items-center py-2"
+                  style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}
                 >
-                  <Text className="text-[#7C9A72] mr-2">{'>'}</Text>
-                  <Text className="text-sm text-[#5A7A50] underline flex-1">
+                  <Text style={{ color: colors.primary, marginRight: 8 }}>{'>'}</Text>
+                  <Text style={{ fontSize: 14, color: '#5A7A50', textDecorationLine: 'underline', flex: 1 }}>
                     {link.title}
                   </Text>
                 </TouchableOpacity>
@@ -353,17 +395,17 @@ export default function Home() {
 
           {/* Reference Images Section */}
           {(referenceImages.length > 0 || imagesLoading) && (
-            <View className="mb-6">
-              <Text className="text-xs text-gray-400 uppercase tracking-wider mb-3">
+            <View style={{ marginBottom: 24 }}>
+              <Text style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
                 Reference Inspiration
               </Text>
               {imagesLoading ? (
-                <View className="h-32 justify-center items-center">
-                  <ActivityIndicator size="small" color="#7C9A72" />
+                <View style={{ height: 128, justifyContent: 'center', alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={colors.primary} />
                 </View>
               ) : (
                 <>
-                  <View className="flex-row flex-wrap justify-between mb-2">
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 8 }}>
                     {referenceImages.map((img) => {
                       const imgWidth = (screenWidth - 48 - 8 * (referenceImages.length - 1)) / referenceImages.length;
                       return (
@@ -375,18 +417,17 @@ export default function Home() {
                         >
                           <Image
                             source={{ uri: img.thumbUrl }}
-                            className="rounded-lg"
-                            style={{ width: imgWidth, height: imgWidth * 0.75 }}
+                            style={{ width: imgWidth, height: imgWidth * 0.75, borderRadius: 8 }}
                             resizeMode="cover"
                           />
-                          <Text className="text-[10px] text-gray-400 mt-1" numberOfLines={1}>
+                          <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 4 }} numberOfLines={1}>
                             {img.photographer}
                           </Text>
                         </TouchableOpacity>
                       );
                     })}
                   </View>
-                  <Text className="text-[10px] text-gray-300 text-right">
+                  <Text style={{ fontSize: 10, color: colors.border, textAlign: 'right' }}>
                     Reference photos
                   </Text>
                 </>
@@ -398,12 +439,13 @@ export default function Home() {
           <VineDivider width={200} opacity={0.15} />
 
           {/* Action Buttons */}
-          <View className="mt-4">
+          <View style={{ marginTop: 16 }}>
             {/* Add to My Portfolio (hidden for free tier) */}
             {tierLimits.canSavePhotos ? (
               <TouchableOpacity
-                className="bg-[#7C9A72] rounded-xl py-4 mb-3"
+                style={{ backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16, marginBottom: 12 }}
                 onPress={() => {
+                  hapticMedium();
                   if (prompt) {
                     router.push({
                       pathname: '/(auth)/respond',
@@ -412,7 +454,7 @@ export default function Home() {
                   }
                 }}
               >
-                <Text className="text-white text-center text-lg font-semibold">
+                <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: 18, fontWeight: '600' }}>
                   Add to My Portfolio
                 </Text>
               </TouchableOpacity>
@@ -422,21 +464,24 @@ export default function Home() {
 
             {/* Generate New */}
             {userTier === 'free' && freePromptUsed && !__DEV__ ? (
-              <View className="bg-gray-200 rounded-xl py-4 mb-3">
-                <Text className="text-gray-500 text-center text-lg font-semibold">
+              <View style={{ backgroundColor: colors.border, borderRadius: 12, paddingVertical: 16, marginBottom: 12 }}>
+                <Text style={{ color: colors.textMuted, textAlign: 'center', fontSize: 18, fontWeight: '600' }}>
                   Generate New
                 </Text>
-                <Text className="text-gray-400 text-center text-xs mt-1">
+                <Text style={{ color: colors.textMuted, textAlign: 'center', fontSize: 12, marginTop: 4 }}>
                   Upgrade to unlock more prompts
                 </Text>
               </View>
             ) : (
               <TouchableOpacity
-                className="bg-white border-2 border-[#7C9A72] rounded-xl py-4"
-                onPress={generateManualPrompt}
+                style={{ backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 16 }}
+                onPress={() => {
+                  hapticMedium();
+                  generateManualPrompt();
+                }}
                 disabled={generating}
               >
-                <Text className="text-[#7C9A72] text-center text-lg font-semibold">
+                <Text style={{ color: colors.primary, textAlign: 'center', fontSize: 18, fontWeight: '600' }}>
                   {generating ? 'Generating...' : 'Generate New'}
                 </Text>
               </TouchableOpacity>
@@ -444,29 +489,29 @@ export default function Home() {
 
             {/* View History */}
             <TouchableOpacity
-              className="bg-white border-2 border-gray-300 rounded-xl py-4 mt-3"
+              style={{ backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.border, borderRadius: 12, paddingVertical: 16, marginTop: 12 }}
               onPress={() => router.push('/(auth)/history')}
             >
-              <Text className="text-gray-700 text-center text-lg font-semibold">
+              <Text style={{ color: colors.textSecondary, textAlign: 'center', fontSize: 18, fontWeight: '600' }}>
                 View History
               </Text>
             </TouchableOpacity>
 
             {/* Gallery & Challenges row */}
-            <View className="flex-row mt-3" style={{ gap: 10 }}>
+            <View style={{ flexDirection: 'row', marginTop: 12, gap: 10 }}>
               <TouchableOpacity
-                className="flex-1 bg-white border-2 border-[#7C9A72] rounded-xl py-4"
+                style={{ flex: 1, backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 16 }}
                 onPress={() => router.push('/(auth)/gallery')}
               >
-                <Text className="text-[#7C9A72] text-center text-base font-semibold">
+                <Text style={{ color: colors.primary, textAlign: 'center', fontSize: 16, fontWeight: '600' }}>
                   My Gallery
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-1 bg-white border-2 border-[#7C9A72] rounded-xl py-4"
+                style={{ flex: 1, backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 16 }}
                 onPress={() => router.push('/(auth)/challenges')}
               >
-                <Text className="text-[#7C9A72] text-center text-base font-semibold">
+                <Text style={{ color: colors.primary, textAlign: 'center', fontSize: 16, fontWeight: '600' }}>
                   Challenges
                 </Text>
               </TouchableOpacity>
@@ -474,10 +519,10 @@ export default function Home() {
 
             {/* Settings Link */}
             <TouchableOpacity
-              className="mt-8"
+              style={{ marginTop: 32 }}
               onPress={() => router.push('/(auth)/settings')}
             >
-              <Text className="text-gray-400 text-center text-sm underline">
+              <Text style={{ color: colors.textMuted, textAlign: 'center', fontSize: 14, textDecorationLine: 'underline' }}>
                 Settings
               </Text>
             </TouchableOpacity>

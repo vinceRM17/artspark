@@ -94,6 +94,13 @@ export default function AuthLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="badges"
+        options={{
+          title: 'Achievements',
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 }

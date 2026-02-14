@@ -5,7 +5,7 @@
  * and a "Complete Today" action button.
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,9 +14,16 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+} from 'react-native-reanimated';
 import { useLocalSearchParams, router } from 'expo-router';
 import { getChallengeById } from '@/lib/constants/challenges';
 import { useChallenges } from '@/lib/hooks/useChallenges';
+import { hapticSuccess, hapticMedium } from '@/lib/utils/haptics';
 
 export default function ChallengeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -55,10 +62,27 @@ export default function ChallengeDetailScreen() {
     ? (progress.days_completed / challenge.duration) * 100
     : 0;
 
+  // Animated progress bar
+  const progressWidth = useSharedValue(0);
+
+  useEffect(() => {
+    if (isEnrolled) {
+      progressWidth.value = withDelay(
+        300,
+        withTiming(Math.max(progressPct, 2), { duration: 800 })
+      );
+    }
+  }, [progressPct, isEnrolled]);
+
+  const progressBarStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
+  }));
+
   const handleJoin = async () => {
     try {
       setActionLoading(true);
       await join(challenge.id);
+      await hapticSuccess();
     } catch {
       Alert.alert('Error', 'Could not join challenge. Please try again.');
     } finally {
@@ -91,6 +115,7 @@ export default function ChallengeDetailScreen() {
   };
 
   const handleCompleteToday = () => {
+    hapticMedium();
     // Navigate to respond flow — the response screen can call completeChallengeDay
     router.push({
       pathname: '/(auth)/respond',
@@ -136,8 +161,8 @@ export default function ChallengeDetailScreen() {
             </Text>
           </View>
           <View className="h-3 bg-gray-100 rounded-full">
-            <View
-              style={{ width: `${Math.max(progressPct, 2)}%` }}
+            <Animated.View
+              style={progressBarStyle}
               className="h-3 bg-[#7C9A72] rounded-full"
             />
           </View>

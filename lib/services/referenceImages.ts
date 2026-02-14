@@ -2,13 +2,11 @@
  * Reference image service
  *
  * Provides real-world reference photos of prompt subjects for artists.
- * Uses Wikimedia Commons search API (free, no key needed) to find
- * actual photographs — NOT artwork, but real subjects in natural form.
- * Falls back to Unsplash if configured.
- *
- * Tracks previously shown image IDs per session to avoid repeats.
+ * Priority: Pexels (best relevance) -> Unsplash -> Wikimedia Commons (fallback).
+ * Deduplicates by both ID and URL to prevent duplicate photos.
  */
 
+const PEXELS_API_KEY = process.env.EXPO_PUBLIC_PEXELS_API_KEY;
 const UNSPLASH_ACCESS_KEY = process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY;
 
 export type ReferenceImage = {
@@ -19,8 +17,9 @@ export type ReferenceImage = {
   alt: string;
 };
 
-// Track seen image IDs per session to avoid repeats
+// Track seen image IDs AND URLs per session to catch duplicates
 let seenImageIds = new Set<string>();
+let seenImageUrls = new Set<string>();
 let currentSubject: string | null = null;
 
 /**
@@ -29,40 +28,140 @@ let currentSubject: string | null = null;
 function resetIfSubjectChanged(subject: string) {
   if (subject !== currentSubject) {
     seenImageIds = new Set();
+    seenImageUrls = new Set();
     currentSubject = subject;
   }
 }
 
-// Photo search queries — specific enough for relevant photos, with variants for variety
+/**
+ * Check if an image is a duplicate (by ID or URL)
+ */
+function isDuplicate(id: string, url: string): boolean {
+  return seenImageIds.has(id) || seenImageUrls.has(url);
+}
+
+/**
+ * Mark an image as seen
+ */
+function markSeen(id: string, url: string) {
+  seenImageIds.add(id);
+  seenImageUrls.add(url);
+}
+
+// Search queries optimized for Pexels (clean, specific terms)
 const SUBJECT_QUERIES: Record<string, string[]> = {
-  'animals': ['wildlife animal photography', 'pet portrait photograph', 'bird nature photo'],
-  'landscapes': ['mountain landscape photograph', 'countryside nature scenery', 'ocean coast photograph'],
-  'people-portraits': ['portrait face photograph', 'candid person photograph', 'street portrait'],
-  'still-life': ['fruit arrangement photograph', 'flowers vase photograph', 'objects table photograph'],
-  'abstract': ['texture macro photograph', 'light abstract photograph', 'reflection water photograph'],
-  'urban': ['city street photograph', 'downtown architecture photograph', 'urban night photograph'],
-  'botanicals': ['flower close up photograph', 'garden plant photograph', 'wildflower nature photograph'],
-  'fantasy': ['foggy forest photograph', 'dramatic clouds photograph', 'ancient ruins photograph'],
-  'food': ['fresh food photograph', 'cooking ingredients photograph', 'market produce photograph'],
-  'architecture': ['building facade photograph', 'interior architecture photograph', 'bridge photograph'],
-  'patterns': ['natural pattern photograph', 'geometric pattern photograph', 'textile pattern photograph'],
-  'mythology': ['ancient statue photograph', 'temple ruins photograph', 'classical sculpture photograph'],
+  'animals': ['wildlife animal', 'pet portrait', 'bird nature'],
+  'landscapes': ['mountain landscape', 'countryside scenery', 'ocean coast'],
+  'people-portraits': ['portrait face', 'person candid', 'street portrait'],
+  'still-life': ['fruit arrangement', 'flowers vase', 'objects table'],
+  'abstract': ['texture macro', 'light abstract', 'water reflection'],
+  'urban': ['city street', 'architecture downtown', 'urban night'],
+  'botanicals': ['flower closeup', 'garden plant', 'wildflower field'],
+  'fantasy': ['foggy forest', 'dramatic clouds', 'ancient ruins'],
+  'food': ['fresh food', 'cooking ingredients', 'market produce'],
+  'architecture': ['building facade', 'interior design', 'bridge structure'],
+  'patterns': ['natural pattern', 'geometric pattern', 'textile fabric'],
+  'mythology': ['ancient statue', 'temple ruins', 'classical sculpture'],
 };
 
 /**
- * Fetch real-world reference photos from Wikimedia Commons
- * Free, no API key, returns actual photographs
+ * Fetch reference images from Pexels (primary source)
+ * Free API with high-quality, relevant photos
+ */
+async function fetchFromPexels(
+  subject: string,
+  count: number
+): Promise<ReferenceImage[]> {
+  if (!PEXELS_API_KEY) return [];
+
+  const queries = SUBJECT_QUERIES[subject] || [subject];
+  const query = queries[Math.floor(Math.random() * queries.length)];
+  const page = Math.floor(Math.random() * 3) + 1; // Random page for variety
+
+  const response = await fetch(
+    `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count + 6}&page=${page}&orientation=landscape`,
+    { headers: { Authorization: PEXELS_API_KEY } }
+  );
+
+  if (!response.ok) return [];
+
+  const data = await response.json();
+  const results: ReferenceImage[] = [];
+
+  for (const photo of data.photos || []) {
+    if (results.length >= count) break;
+
+    const id = String(photo.id);
+    const url = photo.src.medium || photo.src.original;
+
+    if (isDuplicate(id, url)) continue;
+
+    results.push({
+      id,
+      url: photo.src.medium,
+      thumbUrl: photo.src.small,
+      photographer: photo.photographer || 'Pexels',
+      alt: photo.alt || query,
+    });
+
+    markSeen(id, url);
+  }
+
+  return results;
+}
+
+/**
+ * Fetch reference images from Unsplash (secondary source)
+ */
+async function fetchFromUnsplash(
+  subject: string,
+  count: number
+): Promise<ReferenceImage[]> {
+  if (!UNSPLASH_ACCESS_KEY) return [];
+
+  const queries = SUBJECT_QUERIES[subject] || [subject];
+  const query = queries[Math.floor(Math.random() * queries.length)];
+
+  const response = await fetch(
+    `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count + 4}&orientation=landscape&content_filter=high`,
+    { headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` } }
+  );
+
+  if (!response.ok) return [];
+
+  const data = await response.json();
+  const results: ReferenceImage[] = [];
+
+  for (const photo of data.results || []) {
+    if (results.length >= count) break;
+
+    const url = photo.urls.small;
+    if (isDuplicate(photo.id, url)) continue;
+
+    results.push({
+      id: photo.id,
+      url: photo.urls.small,
+      thumbUrl: photo.urls.thumb,
+      photographer: photo.user.name,
+      alt: photo.alt_description || query,
+    });
+
+    markSeen(photo.id, url);
+  }
+
+  return results;
+}
+
+/**
+ * Fetch reference images from Wikimedia Commons (fallback)
  */
 async function fetchFromWikimediaCommons(
   subject: string,
   count: number
 ): Promise<ReferenceImage[]> {
   const queries = SUBJECT_QUERIES[subject] || [subject + ' photograph'];
-  const query = queries[Math.floor(Math.random() * queries.length)];
-  // Random offset for variety
+  const query = queries[Math.floor(Math.random() * queries.length)] + ' photograph';
   const offset = Math.floor(Math.random() * 20);
-
-  // Fetch extra to account for filtering out seen images
   const fetchCount = count + seenImageIds.size + 6;
 
   const params = new URLSearchParams({
@@ -71,7 +170,7 @@ async function fetchFromWikimediaCommons(
     gsrsearch: query,
     gsrlimit: String(fetchCount),
     gsroffset: String(offset),
-    gsrnamespace: '6', // File namespace only
+    gsrnamespace: '6',
     prop: 'imageinfo',
     iiprop: 'url|extmetadata|size',
     iiurlwidth: '400',
@@ -95,70 +194,28 @@ async function fetchFromWikimediaCommons(
     if (results.length >= count) break;
 
     const pageId = String(page.pageid);
-
-    // Skip previously shown images
-    if (seenImageIds.has(pageId)) continue;
-
     const info = page.imageinfo?.[0];
     if (!info) continue;
 
-    // Skip non-image files and very small images
     if (!info.url || info.width < 200 || info.height < 150) continue;
-    // Skip SVGs and icons
     if (info.url.endsWith('.svg') || info.url.endsWith('.gif')) continue;
 
+    const imageUrl = info.thumburl || info.url;
+    if (isDuplicate(pageId, imageUrl)) continue;
+
     const artist = info.extmetadata?.Artist?.value
-      ?.replace(/<[^>]*>/g, '') // Strip HTML tags
+      ?.replace(/<[^>]*>/g, '')
       ?.substring(0, 40) || 'Wikimedia Commons';
 
     results.push({
       id: pageId,
-      url: info.thumburl || info.url,
-      thumbUrl: info.thumburl || info.url,
+      url: imageUrl,
+      thumbUrl: imageUrl,
       photographer: artist,
       alt: page.title?.replace('File:', '').replace(/\.[^.]+$/, '') || 'Reference photo',
     });
 
-    // Mark as seen
-    seenImageIds.add(pageId);
-  }
-
-  return results;
-}
-
-/**
- * Fetch reference images from Unsplash (requires API key)
- */
-async function fetchFromUnsplash(
-  subject: string,
-  count: number
-): Promise<ReferenceImage[]> {
-  const queries = SUBJECT_QUERIES[subject] || [subject];
-  const query = queries[Math.floor(Math.random() * queries.length)];
-
-  const response = await fetch(
-    `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count + 4}&orientation=landscape&content_filter=high`,
-    { headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` } }
-  );
-
-  if (!response.ok) return [];
-
-  const data = await response.json();
-  const results: ReferenceImage[] = [];
-
-  for (const photo of data.results || []) {
-    if (results.length >= count) break;
-    if (seenImageIds.has(photo.id)) continue;
-
-    results.push({
-      id: photo.id,
-      url: photo.urls.small,
-      thumbUrl: photo.urls.thumb,
-      photographer: photo.user.name,
-      alt: photo.alt_description || query,
-    });
-
-    seenImageIds.add(photo.id);
+    markSeen(pageId, imageUrl);
   }
 
   return results;
@@ -166,18 +223,25 @@ async function fetchFromUnsplash(
 
 /**
  * Fetch reference photos for a prompt
- * Returns real photographs of the subject matter for artist reference
- * Automatically deduplicates across calls within the same subject
+ * Priority: Pexels -> Unsplash -> Wikimedia Commons
+ * Deduplicates across calls within the same subject
  */
 export async function fetchReferenceImages(
   subject: string,
   _medium: string,
   count: number = 3
 ): Promise<ReferenceImage[]> {
-  // Reset tracking if subject changed
   resetIfSubjectChanged(subject);
 
-  // Try Unsplash first if key is available
+  // Try Pexels first (best relevance)
+  try {
+    const results = await fetchFromPexels(subject, count);
+    if (results.length > 0) return results;
+  } catch {
+    // Fall through
+  }
+
+  // Try Unsplash second
   if (UNSPLASH_ACCESS_KEY) {
     try {
       const results = await fetchFromUnsplash(subject, count);
@@ -187,7 +251,7 @@ export async function fetchReferenceImages(
     }
   }
 
-  // Use Wikimedia Commons (free, no key, real photographs)
+  // Fallback to Wikimedia Commons
   try {
     return await fetchFromWikimediaCommons(subject, count);
   } catch {

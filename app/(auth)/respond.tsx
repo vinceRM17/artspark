@@ -2,7 +2,7 @@
  * Response creation screen
  *
  * Allows users to photograph their artwork, add notes and tags, and submit responses.
- * Supports offline queueing and native share sheet for completed responses.
+ * Supports offline queueing and branded share cards for completed responses.
  */
 
 import { useState } from 'react';
@@ -17,11 +17,13 @@ import {
   Alert,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as Sharing from 'expo-sharing';
 import { useImagePicker } from '@/lib/hooks/useImagePicker';
 import { useResponseUpload } from '@/lib/hooks/useResponseUpload';
 import { useNetworkStatus } from '@/lib/hooks/useNetworkStatus';
 import { invalidateHistoryCache } from '@/lib/hooks/usePromptHistory';
+import { useTheme } from '@/lib/theme/ThemeContext';
+import { hapticMedium, hapticSuccess } from '@/lib/utils/haptics';
+import ShareModal from '@/components/share/ShareModal';
 
 export default function Respond() {
   const params = useLocalSearchParams();
@@ -31,10 +33,13 @@ export default function Respond() {
   const { images, pickFromLibrary, pickFromCamera, removeImage } = useImagePicker();
   const { submitResponse, uploading, queueLength } = useResponseUpload();
   const { isConnected } = useNetworkStatus();
+  const { colors } = useTheme();
 
   const [notes, setNotes] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [shareVisible, setShareVisible] = useState(false);
+  const [shareImageUri, setShareImageUri] = useState('');
 
   // Parse tags from comma-separated input
   const handleTagInputChange = (text: string) => {
@@ -54,31 +59,14 @@ export default function Respond() {
     setTagInput(newTags.join(', '));
   };
 
-  // Handle share
-  const handleShare = async (imageUri: string) => {
-    const isAvailable = await Sharing.isAvailableAsync();
-    if (!isAvailable) {
-      Alert.alert('Sharing Not Available', 'Sharing is not available on this device');
-      return;
-    }
-
-    try {
-      await Sharing.shareAsync(imageUri, {
-        mimeType: 'image/jpeg',
-        dialogTitle: 'Share your artwork',
-      });
-    } catch (error) {
-      console.error('Error sharing image:', error);
-      Alert.alert('Error', 'Failed to share image');
-    }
-  };
-
   // Submit response
   const handleSubmit = async () => {
     if (images.length === 0) {
       Alert.alert('No Images', 'Please add at least one photo of your artwork');
       return;
     }
+
+    hapticMedium();
 
     const input = {
       prompt_id: promptId,
@@ -90,19 +78,22 @@ export default function Respond() {
     const response = await submitResponse(input);
 
     if (response) {
-      // Successfully uploaded - invalidate history cache
+      // Successfully uploaded
       await invalidateHistoryCache();
+      await hapticSuccess();
 
-      // Offer to share
-      const firstImageUri = images[0]; // Keep reference to local URI for sharing
+      const firstImageUri = images[0];
 
       Alert.alert(
         'Saved!',
         'Your response has been saved.',
         [
           {
-            text: 'Share',
-            onPress: () => handleShare(firstImageUri),
+            text: 'Share Card',
+            onPress: () => {
+              setShareImageUri(firstImageUri);
+              setShareVisible(true);
+            },
           },
           {
             text: 'Done',
@@ -111,167 +102,214 @@ export default function Respond() {
         ]
       );
     } else {
-      // Queued offline - invalidate cache and go back
+      // Queued offline
       await invalidateHistoryCache();
       router.back();
     }
   };
 
   return (
-    <ScrollView className="flex-1 bg-[#FFF8F0]">
-      <View className="px-6 pt-12 pb-8">
-        {/* Header */}
-        <TouchableOpacity onPress={() => router.back()} className="mb-4">
-          <Text className="text-[#7C9A72] text-base">← Back</Text>
-        </TouchableOpacity>
+    <>
+      <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={{ paddingHorizontal: 24, paddingTop: 48, paddingBottom: 32 }}>
+          {/* Header */}
+          <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 16 }}>
+            <Text style={{ color: colors.primary, fontSize: 16 }}>{'\u2190'} Back</Text>
+          </TouchableOpacity>
 
-        <Text className="text-2xl font-semibold text-gray-900 mb-4">Respond to Prompt</Text>
+          <Text style={{ fontSize: 24, fontWeight: '600', color: colors.text, marginBottom: 16 }}>Respond to Prompt</Text>
 
-        {/* Prompt reminder */}
-        <View className="bg-white rounded-xl p-4 mb-6">
-          <Text className="text-sm text-gray-600 italic">{promptText}</Text>
-        </View>
+          {/* Prompt reminder */}
+          <View style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 16, marginBottom: 24 }}>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, fontStyle: 'italic' }}>{promptText}</Text>
+          </View>
 
-        {/* Offline indicator */}
-        {!isConnected && (
-          <View className="bg-yellow-50 rounded-lg p-3 mb-4">
-            <Text className="text-yellow-700 text-xs">
-              You're offline. Your response will be saved and uploaded later.
-            </Text>
-            {queueLength > 0 && (
-              <Text className="text-yellow-700 text-xs mt-1">
-                {queueLength} response(s) waiting to upload
+          {/* Offline indicator */}
+          {!isConnected && (
+            <View style={{ backgroundColor: '#FEFCE8', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+              <Text style={{ color: '#A16207', fontSize: 12 }}>
+                You're offline. Your response will be saved and uploaded later.
               </Text>
+              {queueLength > 0 && (
+                <Text style={{ color: '#A16207', fontSize: 12, marginTop: 4 }}>
+                  {queueLength} response(s) waiting to upload
+                </Text>
+              )}
+            </View>
+          )}
+
+          {/* Image selection section */}
+          <View style={{ marginBottom: 24 }}>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: 12 }}>Photos</Text>
+
+            {/* Image previews */}
+            {images.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginBottom: 12 }}
+              >
+                {images.map((uri, index) => (
+                  <View key={index} style={{ marginRight: 12, position: 'relative' }}>
+                    <Image
+                      source={{ uri }}
+                      style={{ width: 96, height: 96, borderRadius: 12 }}
+                      resizeMode="cover"
+                    />
+                    <TouchableOpacity
+                      onPress={() => removeImage(index)}
+                      style={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        backgroundColor: colors.error,
+                        borderRadius: 12,
+                        width: 24,
+                        height: 24,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>{'\u00D7'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={{ backgroundColor: colors.inputBg, borderRadius: 12, padding: 24, marginBottom: 12, alignItems: 'center' }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: 'center' }}>
+                  Add at least one photo of your artwork
+                </Text>
+              </View>
+            )}
+
+            {/* Image picker buttons */}
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                onPress={pickFromLibrary}
+                style={{ flex: 1, backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 12 }}
+              >
+                <Text style={{ color: colors.primary, textAlign: 'center', fontWeight: '600' }}>
+                  Choose from Library
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={pickFromCamera}
+                style={{ flex: 1, backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 12 }}
+              >
+                <Text style={{ color: colors.primary, textAlign: 'center', fontWeight: '600' }}>
+                  Take Photo
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{ color: colors.textSecondary, fontSize: 12, textAlign: 'center', marginTop: 8 }}>
+              {images.length}/3 photos
+            </Text>
+          </View>
+
+          {/* Notes section */}
+          <View style={{ marginBottom: 24 }}>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, marginBottom: 8 }}>Notes (optional)</Text>
+            <TextInput
+              multiline
+              numberOfLines={4}
+              maxLength={500}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="How did it go? What did you learn?"
+              placeholderTextColor={colors.textMuted}
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 12,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: colors.border,
+                fontSize: 16,
+                color: colors.text,
+                textAlignVertical: 'top',
+              }}
+            />
+            <Text style={{ color: colors.textMuted, fontSize: 12, textAlign: 'right', marginTop: 4 }}>
+              {notes.length}/500
+            </Text>
+          </View>
+
+          {/* Tags section */}
+          <View style={{ marginBottom: 24 }}>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, marginBottom: 8 }}>Tags (optional)</Text>
+            <TextInput
+              value={tagInput}
+              onChangeText={handleTagInputChange}
+              placeholder="Add tags separated by commas"
+              placeholderTextColor={colors.textMuted}
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 12,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: colors.border,
+                fontSize: 16,
+                color: colors.text,
+                marginBottom: 8,
+              }}
+            />
+
+            {/* Tag chips */}
+            {tags.length > 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {tags.map((tag, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => removeTag(index)}
+                    style={{
+                      backgroundColor: colors.primaryLight,
+                      borderRadius: 999,
+                      paddingHorizontal: 12,
+                      paddingVertical: 4,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ color: colors.primary, fontSize: 12, marginRight: 4 }}>{tag}</Text>
+                    <Text style={{ color: colors.primary, fontSize: 12 }}>{'\u00D7'}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             )}
           </View>
-        )}
 
-        {/* Image selection section */}
-        <View className="mb-6">
-          <Text className="text-base font-semibold text-gray-900 mb-3">Photos</Text>
-
-          {/* Image previews */}
-          {images.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              className="mb-3"
-            >
-              {images.map((uri, index) => (
-                <View key={index} className="mr-3 relative">
-                  <Image
-                    source={{ uri }}
-                    className="w-24 h-24 rounded-xl"
-                    resizeMode="cover"
-                  />
-                  <TouchableOpacity
-                    onPress={() => removeImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 rounded-full w-6 h-6 items-center justify-center"
-                  >
-                    <Text className="text-white text-xs font-bold">×</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </ScrollView>
-          ) : (
-            <View className="bg-gray-100 rounded-xl p-6 mb-3 items-center">
-              <Text className="text-gray-500 text-sm text-center">
-                Add at least one photo of your artwork
+          {/* Submit button */}
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={images.length === 0 || uploading}
+            style={{
+              borderRadius: 12,
+              paddingVertical: 16,
+              backgroundColor: images.length === 0 || uploading ? colors.border : colors.primary,
+            }}
+          >
+            {uploading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: 18, fontWeight: '600' }}>
+                Share My Creation
               </Text>
-            </View>
-          )}
-
-          {/* Image picker buttons */}
-          <View className="flex-row gap-3">
-            <TouchableOpacity
-              onPress={pickFromLibrary}
-              className="flex-1 bg-white border-2 border-[#7C9A72] rounded-xl py-3"
-            >
-              <Text className="text-[#7C9A72] text-center font-semibold">
-                Choose from Library
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={pickFromCamera}
-              className="flex-1 bg-white border-2 border-[#7C9A72] rounded-xl py-3"
-            >
-              <Text className="text-[#7C9A72] text-center font-semibold">
-                Take Photo
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text className="text-gray-500 text-xs text-center mt-2">
-            {images.length}/3 photos
-          </Text>
+            )}
+          </TouchableOpacity>
         </View>
+      </ScrollView>
 
-        {/* Notes section */}
-        <View className="mb-6">
-          <Text className="text-sm text-gray-500 mb-2">Notes (optional)</Text>
-          <TextInput
-            multiline
-            numberOfLines={4}
-            maxLength={500}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="How did it go? What did you learn?"
-            placeholderTextColor="#9CA3AF"
-            className="bg-white rounded-xl p-4 border border-gray-200 text-base text-gray-900"
-            style={{ textAlignVertical: 'top' }}
-          />
-          <Text className="text-gray-400 text-xs text-right mt-1">
-            {notes.length}/500
-          </Text>
-        </View>
-
-        {/* Tags section */}
-        <View className="mb-6">
-          <Text className="text-sm text-gray-500 mb-2">Tags (optional)</Text>
-          <TextInput
-            value={tagInput}
-            onChangeText={handleTagInputChange}
-            placeholder="Add tags separated by commas"
-            placeholderTextColor="#9CA3AF"
-            className="bg-white rounded-xl p-4 border border-gray-200 text-base text-gray-900 mb-2"
-          />
-
-          {/* Tag chips */}
-          {tags.length > 0 && (
-            <View className="flex-row flex-wrap gap-2">
-              {tags.map((tag, index) => (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => removeTag(index)}
-                  className="bg-[#7C9A72]/10 rounded-full px-3 py-1 flex-row items-center"
-                >
-                  <Text className="text-[#7C9A72] text-xs mr-1">{tag}</Text>
-                  <Text className="text-[#7C9A72] text-xs">×</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* Submit button */}
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={images.length === 0 || uploading}
-          className={`rounded-xl py-4 ${
-            images.length === 0 || uploading
-              ? 'bg-gray-300'
-              : 'bg-[#7C9A72]'
-          }`}
-        >
-          {uploading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-white text-center text-lg font-semibold">
-              Share My Creation
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      {/* Share Card Modal */}
+      <ShareModal
+        visible={shareVisible}
+        onClose={() => {
+          setShareVisible(false);
+          router.back();
+        }}
+        promptText={promptText}
+        imageUri={shareImageUri}
+      />
+    </>
   );
 }
