@@ -44,7 +44,8 @@ export default function Step5() {
   };
 
   const handleComplete = async () => {
-    if (!session?.user?.id) {
+    const userId = session?.user?.id || (__DEV__ ? 'dev-user' : null);
+    if (!userId) {
       Alert.alert('Error', 'No user session found. Please sign in again.');
       return;
     }
@@ -65,16 +66,18 @@ export default function Step5() {
         .toString()
         .padStart(2, '0')}:00`;
 
-      // Save all preferences to Supabase
-      await savePreferences(session.user.id, {
-        art_mediums: progress.mediums || [],
-        color_palettes: progress.colorPalettes || [],
-        subjects: progress.subjects || [],
-        exclusions: progress.exclusions || [],
-        notification_time: formattedTime,
-        notification_enabled: permissionGranted,
-        onboarding_completed: true,
-      });
+      // Save all preferences to Supabase (skip in dev mode without real session)
+      if (session?.user?.id) {
+        await savePreferences(userId, {
+          art_mediums: progress.mediums || [],
+          color_palettes: progress.colorPalettes || [],
+          subjects: progress.subjects || [],
+          exclusions: progress.exclusions || [],
+          notification_time: formattedTime,
+          notification_enabled: permissionGranted,
+          onboarding_completed: true,
+        });
+      }
 
       // Schedule notification if permission granted
       if (permissionGranted) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -98,6 +98,20 @@ export default function OnboardingStep3() {
         name="subjects"
         render={({ field }) => (
           <View>
+            <TouchableOpacity
+              onPress={() => {
+                if (field.value.length === SUBJECT_OPTIONS.length) {
+                  field.onChange([]);
+                } else {
+                  field.onChange(SUBJECT_OPTIONS.map((o) => o.id));
+                }
+              }}
+              className="mb-3 self-end"
+            >
+              <Text className="text-[#7C9A72] font-medium text-sm">
+                {field.value.length === SUBJECT_OPTIONS.length ? 'Deselect All' : 'Select All'}
+              </Text>
+            </TouchableOpacity>
             <ChipGrid
               options={SUBJECT_OPTIONS}
               selectedIds={field.value}

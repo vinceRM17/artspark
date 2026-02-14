@@ -1,7 +1,11 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, Dimensions } from 'react-native';
 import { useSession } from '@/components/auth/SessionProvider';
 import { router, Redirect } from 'expo-router';
+import FloatingLeaves from '@/components/botanical/FloatingLeaves';
+import VineDivider from '@/components/botanical/VineDivider';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -47,9 +51,12 @@ export default function SignIn() {
   };
 
   return (
-    <View className="flex-1 bg-white px-6 justify-center">
-      <Text className="text-3xl font-bold mb-2">Welcome to ArtSpark</Text>
-      <Text className="text-gray-600 mb-8">
+    <View className="flex-1 bg-[#FFF8F0] px-6 justify-center">
+      <FloatingLeaves width={screenWidth} height={screenHeight} opacity={0.05} />
+      <Text className="text-3xl font-bold mb-1 text-gray-900">Welcome to</Text>
+      <Text className="text-3xl font-bold mb-2 text-[#7C9A72]">ArtSpark</Text>
+      <VineDivider width={160} opacity={0.25} />
+      <Text className="text-gray-500 mb-8 mt-2">
         Sign in to get your daily art inspiration
       </Text>
 
@@ -66,7 +73,7 @@ export default function SignIn() {
       />
 
       <TouchableOpacity
-        className="bg-blue-600 rounded-lg py-3 mb-4"
+        className="bg-[#7C9A72] rounded-xl py-3 mb-4"
         onPress={handleSignIn}
         disabled={isLoading}
       >

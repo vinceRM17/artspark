@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -116,25 +116,36 @@ export default function OnboardingStep4() {
       showSkip={true}
       nextDisabled={false} // Optional step, always enabled
     >
-      <Controller
-        control={control}
-        name="exclusions"
-        render={({ field }) => (
-          <View>
-            <ChipGrid
-              options={availableOptions}
-              selectedIds={field.value || []}
-              onToggle={(id) => {
-                const current = field.value || [];
-                const newValue = current.includes(id)
-                  ? current.filter((exclusionId) => exclusionId !== id)
-                  : [...current, id];
-                field.onChange(newValue);
-              }}
-            />
-          </View>
-        )}
-      />
+      {availableOptions.length === 0 ? (
+        <View className="flex-1 justify-center items-center py-12">
+          <Text className="text-gray-500 text-center text-base">
+            You selected all subjects — nothing to exclude!
+          </Text>
+          <Text className="text-gray-400 text-center text-sm mt-2">
+            Tap Next or Skip to continue.
+          </Text>
+        </View>
+      ) : (
+        <Controller
+          control={control}
+          name="exclusions"
+          render={({ field }) => (
+            <View>
+              <ChipGrid
+                options={availableOptions}
+                selectedIds={field.value || []}
+                onToggle={(id) => {
+                  const current = field.value || [];
+                  const newValue = current.includes(id)
+                    ? current.filter((exclusionId) => exclusionId !== id)
+                    : [...current, id];
+                  field.onChange(newValue);
+                }}
+              />
+            </View>
+          )}
+        />
+      )}
     </OnboardingLayout>
   );
 }
