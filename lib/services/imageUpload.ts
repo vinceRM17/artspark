@@ -2,11 +2,11 @@
  * Image upload service
  *
  * Handles image compression and upload to Supabase Storage.
- * Uses react-native-compressor for efficient compression with quality 0.8 and max 2048px.
+ * Uses expo-image-manipulator for compression (Expo Go compatible).
  * Converts images to ArrayBuffer via base64 for Supabase Storage upload.
  */
 
-import { Image } from 'react-native-compressor';
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from '@/lib/supabase';
@@ -23,14 +23,12 @@ import {
  */
 export async function compressImage(uri: string): Promise<string> {
   try {
-    const compressedUri = await Image.compress(uri, {
-      compressionMethod: 'auto',
-      quality: COMPRESSION_QUALITY,
-      maxWidth: MAX_IMAGE_DIMENSION,
-      maxHeight: MAX_IMAGE_DIMENSION,
-      returnableOutputType: 'uri',
-    });
-    return compressedUri;
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: MAX_IMAGE_DIMENSION } }],
+      { compress: COMPRESSION_QUALITY, format: ImageManipulator.SaveFormat.JPEG }
+    );
+    return result.uri;
   } catch (error) {
     console.error('Error compressing image:', error);
     throw new Error('Failed to compress image');

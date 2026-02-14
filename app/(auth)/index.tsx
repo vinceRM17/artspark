@@ -2,7 +2,8 @@
  * Home screen - Today's prompt display
  *
  * Shows the daily personalized prompt in a large artistic card
- * with botanical decorations, reference images, and action buttons.
+ * with botanical decorations, reference images, thumbs up/down
+ * feedback, and action buttons.
  */
 
 import { useState, useEffect } from 'react';
@@ -18,11 +19,14 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useDailyPrompt } from '@/lib/hooks/useDailyPrompt';
-import { MEDIUM_OPTIONS, COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
+import { MEDIUM_OPTIONS, COLOR_PALETTE_OPTIONS, SUBJECT_OPTIONS } from '@/lib/constants/preferences';
 import { fetchReferenceImages, ReferenceImage } from '@/lib/services/referenceImages';
+import { savePreferences, getPreferences } from '@/lib/services/preferences';
+import { useSession } from '@/components/auth/SessionProvider';
 import LeafCorner from '@/components/botanical/LeafCorner';
 import VineDivider from '@/components/botanical/VineDivider';
 import FloatingLeaves from '@/components/botanical/FloatingLeaves';
+import FeedbackModal from '@/components/prompts/FeedbackModal';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -35,17 +39,82 @@ export default function Home() {
   const { prompt, loading, error, generating, generateManualPrompt } = useDailyPrompt();
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [liked, setLiked] = useState<boolean | null>(null); // null = no reaction yet
+
+  const { session } = useSession();
+  const userId = session?.user?.id;
 
   // Fetch reference images when prompt changes
   useEffect(() => {
     if (prompt) {
       setImagesLoading(true);
+      setLiked(null); // Reset reaction for new prompt
       fetchReferenceImages(prompt.subject, prompt.medium, 3)
         .then(setReferenceImages)
         .catch(() => setReferenceImages([]))
         .finally(() => setImagesLoading(false));
     }
   }, [prompt?.id]);
+
+  // Handle thumbs up
+  const handleThumbsUp = () => {
+    setLiked(true);
+  };
+
+  // Handle thumbs down - show feedback modal
+  const handleThumbsDown = () => {
+    if (!prompt) return;
+    setFeedbackVisible(true);
+  };
+
+  // Handle feedback submission
+  const handleFeedbackSubmit = async (
+    reasons: ('subject' | 'medium' | 'twist' | 'other')[],
+    updatePrefs: boolean
+  ) => {
+    setFeedbackVisible(false);
+    setLiked(false);
+
+    if (updatePrefs && prompt) {
+      try {
+        // In dev mode, just log what would happen
+        if (!userId && __DEV__) {
+          console.log('[Dev] Would update preferences:', reasons);
+        } else if (userId) {
+          const currentPrefs = await getPreferences(userId);
+          if (currentPrefs) {
+            const updates: Record<string, any> = {};
+
+            if (reasons.includes('subject')) {
+              // Add disliked subject to exclusions
+              const currentExclusions = currentPrefs.exclusions || [];
+              if (!currentExclusions.includes(prompt.subject)) {
+                updates.exclusions = [...currentExclusions, prompt.subject];
+              }
+            }
+
+            if (reasons.includes('medium')) {
+              // Remove disliked medium from preferred mediums
+              const currentMediums = currentPrefs.art_mediums || [];
+              updates.art_mediums = currentMediums.filter(
+                (m: string) => m !== prompt.medium
+              );
+            }
+
+            if (Object.keys(updates).length > 0) {
+              await savePreferences(userId, updates);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to update preferences from feedback:', err);
+      }
+    }
+
+    // Generate a new prompt regardless
+    generateManualPrompt();
+  };
 
   // Loading state
   if (loading) {
@@ -101,7 +170,7 @@ export default function Home() {
         </View>
 
         {/* Main Prompt Card with leaf corners */}
-        <View className="bg-white rounded-2xl p-6 shadow-sm mb-6 overflow-hidden">
+        <View className="bg-white rounded-2xl p-6 shadow-sm mb-4 overflow-hidden">
           <LeafCorner position="topRight" size={70} opacity={0.1} />
           <LeafCorner position="bottomLeft" size={55} opacity={0.08} />
 
@@ -134,6 +203,49 @@ export default function Home() {
               </View>
             )}
           </View>
+
+          {/* Thumbs Up / Down Row */}
+          <View className="flex-row items-center justify-center mt-5 pt-4 border-t border-gray-100">
+            <TouchableOpacity
+              onPress={handleThumbsUp}
+              className="flex-row items-center px-6 py-2 rounded-full mr-4"
+              style={{
+                backgroundColor: liked === true ? '#F0F5EE' : '#F9FAFB',
+                borderWidth: 1,
+                borderColor: liked === true ? '#7C9A72' : '#E5E7EB',
+              }}
+            >
+              <Text style={{ fontSize: 20 }}>
+                {liked === true ? '\u{1F44D}' : '\u{1F44D}'}
+              </Text>
+              <Text
+                className="ml-2 text-sm font-medium"
+                style={{ color: liked === true ? '#7C9A72' : '#9CA3AF' }}
+              >
+                Love it
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleThumbsDown}
+              className="flex-row items-center px-6 py-2 rounded-full"
+              style={{
+                backgroundColor: liked === false ? '#FEF2F2' : '#F9FAFB',
+                borderWidth: 1,
+                borderColor: liked === false ? '#EF4444' : '#E5E7EB',
+              }}
+            >
+              <Text style={{ fontSize: 20 }}>
+                {'\u{1F44E}'}
+              </Text>
+              <Text
+                className="ml-2 text-sm font-medium"
+                style={{ color: liked === false ? '#EF4444' : '#9CA3AF' }}
+              >
+                Not for me
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Reference Images Section */}
@@ -156,12 +268,12 @@ export default function Home() {
                   {referenceImages.map((img) => (
                     <TouchableOpacity
                       key={img.id}
-                      onPress={() => Linking.openURL(img.unsplashUrl)}
+                      onPress={() => Linking.openURL(img.url)}
                       activeOpacity={0.8}
                       className="mr-3"
                     >
                       <Image
-                        source={{ uri: img.url }}
+                        source={{ uri: img.thumbUrl }}
                         className="rounded-xl"
                         style={{ width: 180, height: 130 }}
                         resizeMode="cover"
@@ -173,7 +285,7 @@ export default function Home() {
                   ))}
                 </ScrollView>
                 <Text className="text-[10px] text-gray-300 text-right">
-                  Photos from Unsplash
+                  Public domain reference photos
                 </Text>
               </>
             )}
@@ -202,14 +314,14 @@ export default function Home() {
             </Text>
           </TouchableOpacity>
 
-          {/* Generate Now */}
+          {/* Generate New */}
           <TouchableOpacity
             className="bg-white border-2 border-[#7C9A72] rounded-xl py-4"
             onPress={generateManualPrompt}
             disabled={generating}
           >
             <Text className="text-[#7C9A72] text-center text-lg font-semibold">
-              {generating ? 'Generating...' : 'Generate Now'}
+              {generating ? 'Generating...' : 'Generate New'}
             </Text>
           </TouchableOpacity>
 
@@ -234,6 +346,14 @@ export default function Home() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        visible={feedbackVisible}
+        prompt={prompt}
+        onSubmit={handleFeedbackSubmit}
+        onCancel={() => setFeedbackVisible(false)}
+      />
     </ScrollView>
   );
 }

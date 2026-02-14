@@ -87,6 +87,31 @@ export function useDailyPrompt(): {
 
   // Generate manual prompt on demand
   async function handleGenerateManualPrompt() {
+    // Dev mode: generate a mock prompt locally
+    if (!userId && __DEV__) {
+      setGenerating(true);
+      const subjects = ['animals', 'landscapes', 'still-life', 'abstract', 'urban', 'botanicals', 'food', 'architecture'];
+      const mediums = ['watercolor', 'pencil', 'ink', 'acrylic', 'digital', 'charcoal'];
+      const randomSubject = subjects[Math.floor(Math.random() * subjects.length)];
+      const randomMedium = mediums[Math.floor(Math.random() * mediums.length)];
+      const twists = [null, 'Try using only your non-dominant hand', 'Complete it in under 15 minutes', 'Use only three colors', 'Work from memory, not reference'];
+      const randomTwist = twists[Math.floor(Math.random() * twists.length)];
+      setPrompt({
+        id: `dev-manual-${Date.now()}`,
+        user_id: 'dev',
+        date_key: new Date().toISOString().split('T')[0],
+        source: 'manual',
+        medium: randomMedium,
+        subject: randomSubject,
+        color_rule: null,
+        twist: randomTwist,
+        prompt_text: `Create a ${randomMedium} piece featuring ${randomSubject}.${randomTwist ? ' ' + randomTwist + '.' : ''}`,
+        created_at: new Date().toISOString(),
+      });
+      setGenerating(false);
+      return;
+    }
+
     if (!userId) return;
 
     setGenerating(true);
