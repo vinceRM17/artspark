@@ -91,6 +91,7 @@ export default function OnboardingStep3() {
       title="What inspires you?"
       subtitle="Pick subjects you'd love to get prompts about."
       onNext={handleSubmit(onSubmit)}
+      onBack={() => router.back()}
       nextDisabled={selectedSubjects.length === 0}
     >
       <Controller

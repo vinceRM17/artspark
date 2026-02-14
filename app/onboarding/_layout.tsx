@@ -5,7 +5,7 @@ export default function OnboardingLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        gestureEnabled: false, // Prevent swipe-back during onboarding
+        gestureEnabled: true, // Allow swipe-back to change answers
         animation: 'slide_from_right',
       }}
     />

@@ -122,6 +122,7 @@ export default function Step6() {
         title="When should we inspire you?"
         subtitle="Get a daily art prompt at your favorite creative time."
         onNext={handleEnableNotifications}
+        onBack={() => router.back()}
         nextLabel="Enable notifications"
         showSkip={true}
         onSkip={handleMaybeLater}
@@ -147,6 +148,7 @@ export default function Step6() {
       title="When should we inspire you?"
       subtitle="Pick your preferred time for daily prompts."
       onNext={handleComplete}
+      onBack={() => router.back()}
       nextLabel="Complete Setup"
       nextDisabled={loading}
     >

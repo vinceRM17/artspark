@@ -112,6 +112,7 @@ export default function OnboardingStep4() {
       title="Anything you'd rather avoid?"
       subtitle="We'll make sure these never show up in your prompts. Skip if nothing bothers you."
       onNext={handleSubmit(onSubmit)}
+      onBack={() => router.back()}
       onSkip={onSkip}
       showSkip={true}
       nextDisabled={false} // Optional step, always enabled

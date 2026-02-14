@@ -119,6 +119,7 @@ export default function OnboardingStep5Portfolio() {
       title="Share your art with us"
       subtitle="Upload 1-3 pieces so we can learn your style. You can always add more later."
       onNext={handleNext}
+      onBack={() => router.back()}
       onSkip={handleSkip}
       showSkip={true}
       nextLabel={uploading ? 'Uploading...' : images.length > 0 ? 'Upload & Continue' : 'Continue'}

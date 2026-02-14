@@ -13,6 +13,7 @@ type OnboardingLayoutProps = {
   title: string;
   subtitle?: string;
   onNext: () => void;
+  onBack?: () => void;
   onSkip?: () => void;
   nextLabel?: string;
   nextDisabled?: boolean;
@@ -31,6 +32,7 @@ export default function OnboardingLayout({
   title,
   subtitle,
   onNext,
+  onBack,
   onSkip,
   nextLabel = 'Next',
   nextDisabled = false,
@@ -40,6 +42,17 @@ export default function OnboardingLayout({
     <SafeAreaView className="flex-1 bg-[#FFF8F0]">
       {/* Background botanical decoration */}
       <FloatingLeaves width={screenWidth} height={screenHeight} opacity={0.04} />
+
+      {/* Back button (shown on steps after the first) */}
+      {onBack && (
+        <TouchableOpacity
+          onPress={onBack}
+          className="px-6 pt-3 pb-1"
+          activeOpacity={0.6}
+        >
+          <Text className="text-[#7C9A72] text-base">{'\u2190'} Back</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Progress indicator at top */}
       <ProgressIndicator currentStep={step} totalSteps={totalSteps} />

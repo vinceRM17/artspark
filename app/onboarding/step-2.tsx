@@ -105,6 +105,7 @@ export default function OnboardingStep2() {
       title="Tell us about yourself"
       subtitle="This helps us tailor prompts to your experience level."
       onNext={handleSubmit(onSubmit)}
+      onBack={() => router.back()}
       onSkip={onSkip}
       showSkip={true}
       nextDisabled={false}
