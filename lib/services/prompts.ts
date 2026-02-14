@@ -8,7 +8,8 @@
 import { supabase } from '@/lib/supabase';
 import { getPreferences, UserPreferences } from './preferences';
 import { MEDIUM_OPTIONS, SUBJECT_OPTIONS, COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
-import { CREATIVE_TWISTS } from '@/lib/constants/twists';
+import { getTwistsForMedium } from '@/lib/constants/twists';
+import { getPromptTemplate } from '@/lib/constants/promptTemplates';
 import { Prompt, PromptWithStatus } from '@/lib/schemas/prompts';
 
 // Re-export Prompt type for convenience
@@ -76,8 +77,8 @@ async function getEligibleSubjects(
 }
 
 /**
- * Assemble human-readable prompt text from preference IDs
- * Looks up display labels from OPTIONS constants
+ * Assemble human-readable prompt text using artistically meaningful templates
+ * Pairs medium + subject with appropriate artistic direction
  */
 function assemblePromptText(
   medium: string,
@@ -85,24 +86,23 @@ function assemblePromptText(
   colorRule: string | null,
   twist: string | null
 ): string {
-  // Look up display labels
-  const mediumLabel = MEDIUM_OPTIONS.find(m => m.id === medium)?.label || medium;
-  const subjectLabel = SUBJECT_OPTIONS.find(s => s.id === subject)?.label || subject;
-  const colorLabel = colorRule
-    ? COLOR_PALETTE_OPTIONS.find(c => c.id === colorRule)?.label || colorRule
-    : null;
+  // Get an artistically meaningful base prompt
+  let prompt = getPromptTemplate(medium, subject);
 
-  // Assemble base prompt
-  let prompt = `Create a ${mediumLabel.toLowerCase()} piece featuring ${subjectLabel.toLowerCase()}`;
-
-  // Add color rule if present
-  if (colorLabel) {
-    prompt += ` with ${colorLabel.toLowerCase()} colors`;
+  // Add color direction if present
+  if (colorRule) {
+    const colorLabel = COLOR_PALETTE_OPTIONS.find(c => c.id === colorRule)?.label || colorRule;
+    prompt += `. Work with a ${colorLabel.toLowerCase()} palette`;
   }
 
   // Add twist if present
   if (twist) {
     prompt += `. ${twist}`;
+  }
+
+  // Ensure it ends with a period
+  if (!prompt.endsWith('.')) {
+    prompt += '.';
   }
 
   return prompt;
@@ -142,8 +142,11 @@ async function generatePrompt(
       ? randomItem(preferences.color_palettes)
       : null;
 
-  // Twist: ~50% chance
-  const twist = Math.random() < 0.5 ? randomItem([...CREATIVE_TWISTS]) : null;
+  // Twist: ~50% chance, filtered to medium-compatible twists
+  const compatibleTwists = getTwistsForMedium(medium);
+  const twist = Math.random() < 0.5 && compatibleTwists.length > 0
+    ? randomItem(compatibleTwists).text
+    : null;
 
   // Assemble prompt text
   const prompt_text = assemblePromptText(medium, subject, color_rule, twist);

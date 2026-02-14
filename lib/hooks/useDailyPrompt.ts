@@ -2,7 +2,8 @@
  * useDailyPrompt hook
  *
  * Manages daily prompt state with AsyncStorage caching and on-demand generation.
- * Fetches today's prompt on mount, caches it for the day, supports manual generation.
+ * In dev mode, reads onboarding preferences from AsyncStorage and generates
+ * preference-aware mock prompts locally.
  */
 
 import { useState, useEffect } from 'react';
@@ -10,6 +11,119 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getTodayPrompt, createManualPrompt } from '@/lib/services/prompts';
 import { Prompt } from '@/lib/schemas/prompts';
 import { useSession } from '@/components/auth/SessionProvider';
+import { getTwistsForMedium } from '@/lib/constants/twists';
+import { getPromptTemplate } from '@/lib/constants/promptTemplates';
+
+const ONBOARDING_KEY = '@artspark:onboarding-progress';
+const DEV_PREFS_KEY = '@artspark:dev-preferences';
+
+type DevPreferences = {
+  mediums: string[];
+  subjects: string[];
+  exclusions: string[];
+  colorPalettes: string[];
+};
+
+const DEFAULT_DEV_PREFS: DevPreferences = {
+  mediums: ['watercolor', 'pencil', 'ink'],
+  subjects: ['botanicals', 'landscapes', 'animals'],
+  exclusions: [],
+  colorPalettes: [],
+};
+
+/**
+ * Load user preferences for dev mode from AsyncStorage
+ * Checks onboarding progress first, then saved dev prefs
+ */
+async function loadDevPreferences(): Promise<DevPreferences> {
+  try {
+    // Check onboarding progress (set during onboarding steps)
+    const progressJson = await AsyncStorage.getItem(ONBOARDING_KEY);
+    if (progressJson) {
+      const progress = JSON.parse(progressJson);
+      if (progress.mediums?.length > 0 || progress.subjects?.length > 0) {
+        const prefs: DevPreferences = {
+          mediums: progress.mediums || DEFAULT_DEV_PREFS.mediums,
+          subjects: progress.subjects || DEFAULT_DEV_PREFS.subjects,
+          exclusions: progress.exclusions || [],
+          colorPalettes: progress.colorPalettes || [],
+        };
+        // Cache for future use
+        await AsyncStorage.setItem(DEV_PREFS_KEY, JSON.stringify(prefs));
+        return prefs;
+      }
+    }
+
+    // Check cached dev preferences
+    const cachedJson = await AsyncStorage.getItem(DEV_PREFS_KEY);
+    if (cachedJson) {
+      return JSON.parse(cachedJson);
+    }
+  } catch {
+    // Fall through to defaults
+  }
+
+  return DEFAULT_DEV_PREFS;
+}
+
+function randomItem<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/**
+ * Generate a preference-aware mock prompt for dev mode
+ */
+function generateDevPrompt(prefs: DevPreferences, source: 'daily' | 'manual'): Prompt {
+  const medium = randomItem(prefs.mediums);
+
+  // Filter subjects by exclusions
+  const eligible = prefs.subjects.filter(s => !prefs.exclusions.includes(s));
+  const subject = randomItem(eligible.length > 0 ? eligible : prefs.subjects);
+
+  // Color rule: ~40% chance if user has palettes
+  const color_rule = prefs.colorPalettes.length > 0 && Math.random() < 0.4
+    ? randomItem(prefs.colorPalettes)
+    : null;
+
+  // Twist: ~50% chance, medium-compatible
+  const compatibleTwists = getTwistsForMedium(medium);
+  const twist = Math.random() < 0.5 && compatibleTwists.length > 0
+    ? randomItem(compatibleTwists).text
+    : null;
+
+  // Build artistically meaningful prompt text
+  let promptText = getPromptTemplate(medium, subject);
+  if (color_rule) {
+    const colorLabels: Record<string, string> = {
+      'earthy': 'earthy', 'vibrant': 'vibrant', 'monochrome': 'monochrome',
+      'pastels': 'pastel', 'complementary': 'complementary', 'warm': 'warm',
+      'cool': 'cool', 'random-ok': 'any',
+    };
+    const colorLabel = colorLabels[color_rule] || color_rule;
+    if (color_rule !== 'random-ok') {
+      promptText += `. Work with a ${colorLabel} palette`;
+    }
+  }
+  if (twist) {
+    promptText += `. ${twist}`;
+  }
+  if (!promptText.endsWith('.')) {
+    promptText += '.';
+  }
+
+  return {
+    id: source === 'daily' ? 'dev-mock' : `dev-manual-${Date.now()}`,
+    user_id: 'dev',
+    date_key: new Date().toISOString().split('T')[0],
+    source,
+    medium,
+    subject,
+    color_rule,
+    twist,
+    prompt_text: promptText,
+    created_at: new Date().toISOString(),
+  };
+}
 
 export function useDailyPrompt(): {
   prompt: Prompt | null;
@@ -22,28 +136,26 @@ export function useDailyPrompt(): {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [devPrefs, setDevPrefs] = useState<DevPreferences | null>(null);
 
   const { session } = useSession();
   const userId = session?.user?.id;
+
+  // Load dev preferences on mount
+  useEffect(() => {
+    if (!userId && __DEV__) {
+      loadDevPreferences().then(setDevPrefs);
+    }
+  }, [userId]);
 
   // Fetch daily prompt on mount
   useEffect(() => {
     async function fetchDailyPrompt() {
       // Dev mode fallback when no userId
       if (!userId && __DEV__) {
-        const today = new Date().toISOString().split('T')[0];
-        setPrompt({
-          id: 'dev-mock',
-          user_id: 'dev',
-          date_key: today,
-          source: 'daily',
-          medium: 'watercolor',
-          subject: 'botanicals',
-          color_rule: null,
-          twist: null,
-          prompt_text: 'Create a watercolor piece featuring botanicals. Focus on texture over detail.',
-          created_at: new Date().toISOString(),
-        });
+        const prefs = await loadDevPreferences();
+        setDevPrefs(prefs);
+        setPrompt(generateDevPrompt(prefs, 'daily'));
         setLoading(false);
         return;
       }
@@ -87,27 +199,11 @@ export function useDailyPrompt(): {
 
   // Generate manual prompt on demand
   async function handleGenerateManualPrompt() {
-    // Dev mode: generate a mock prompt locally
+    // Dev mode: generate a preference-aware mock prompt
     if (!userId && __DEV__) {
       setGenerating(true);
-      const subjects = ['animals', 'landscapes', 'still-life', 'abstract', 'urban', 'botanicals', 'food', 'architecture'];
-      const mediums = ['watercolor', 'pencil', 'ink', 'acrylic', 'digital', 'charcoal'];
-      const randomSubject = subjects[Math.floor(Math.random() * subjects.length)];
-      const randomMedium = mediums[Math.floor(Math.random() * mediums.length)];
-      const twists = [null, 'Try using only your non-dominant hand', 'Complete it in under 15 minutes', 'Use only three colors', 'Work from memory, not reference'];
-      const randomTwist = twists[Math.floor(Math.random() * twists.length)];
-      setPrompt({
-        id: `dev-manual-${Date.now()}`,
-        user_id: 'dev',
-        date_key: new Date().toISOString().split('T')[0],
-        source: 'manual',
-        medium: randomMedium,
-        subject: randomSubject,
-        color_rule: null,
-        twist: randomTwist,
-        prompt_text: `Create a ${randomMedium} piece featuring ${randomSubject}.${randomTwist ? ' ' + randomTwist + '.' : ''}`,
-        created_at: new Date().toISOString(),
-      });
+      const prefs = devPrefs || await loadDevPreferences();
+      setPrompt(generateDevPrompt(prefs, 'manual'));
       setGenerating(false);
       return;
     }
@@ -119,8 +215,7 @@ export function useDailyPrompt(): {
 
     try {
       const manualPrompt = await createManualPrompt(userId);
-      setPrompt(manualPrompt); // Replace displayed prompt
-      // Do NOT cache manual prompts
+      setPrompt(manualPrompt);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate prompt');
     } finally {

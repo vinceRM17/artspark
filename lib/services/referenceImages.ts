@@ -1,10 +1,10 @@
 /**
  * Reference image service
  *
- * Provides reference artwork to accompany daily prompts.
- * Uses Art Institute of Chicago's free public API (no key needed)
- * with Elasticsearch queries for highly relevant artwork results.
- * Falls back to Unsplash API if configured.
+ * Provides real-world reference photos of prompt subjects for artists.
+ * Uses Wikimedia Commons search API (free, no key needed) to find
+ * actual photographs — NOT artwork, but real subjects in natural form.
+ * Falls back to Unsplash if configured.
  */
 
 const UNSPLASH_ACCESS_KEY = process.env.EXPO_PUBLIC_UNSPLASH_ACCESS_KEY;
@@ -17,137 +17,86 @@ export type ReferenceImage = {
   alt: string;
 };
 
-// Medium keywords the Art Institute API understands
-const MEDIUM_KEYWORDS: Record<string, string> = {
-  'watercolor': 'watercolor',
-  'gouache': 'gouache',
-  'acrylic': 'acrylic',
-  'oil': 'oil on canvas',
-  'pencil': 'graphite pencil drawing',
-  'ink': 'ink',
-  'digital': 'print',
-  'collage': 'collage',
-  'paper-art': 'paper',
-  'pastel': 'pastel',
-  'charcoal': 'charcoal',
-  'mixed-media': 'mixed media',
-};
-
-// Tight subject keywords — short and specific for better matching
-const SUBJECT_KEYWORDS: Record<string, string> = {
-  'animals': 'animals',
-  'landscapes': 'landscape',
-  'people-portraits': 'portrait',
-  'still-life': 'still life',
-  'abstract': 'abstract',
-  'urban': 'city street',
-  'botanicals': 'flowers',
-  'fantasy': 'fantasy mythological',
-  'food': 'fruit food',
-  'architecture': 'architecture',
-  'patterns': 'pattern ornament',
-  'mythology': 'mythology gods',
+// Photo search queries — specific enough for relevant photos, with variants for variety
+const SUBJECT_QUERIES: Record<string, string[]> = {
+  'animals': ['wildlife animal photography', 'pet portrait photograph', 'bird nature photo'],
+  'landscapes': ['mountain landscape photograph', 'countryside nature scenery', 'ocean coast photograph'],
+  'people-portraits': ['portrait face photograph', 'candid person photograph', 'street portrait'],
+  'still-life': ['fruit arrangement photograph', 'flowers vase photograph', 'objects table photograph'],
+  'abstract': ['texture macro photograph', 'light abstract photograph', 'reflection water photograph'],
+  'urban': ['city street photograph', 'downtown architecture photograph', 'urban night photograph'],
+  'botanicals': ['flower close up photograph', 'garden plant photograph', 'wildflower nature photograph'],
+  'fantasy': ['foggy forest photograph', 'dramatic clouds photograph', 'ancient ruins photograph'],
+  'food': ['fresh food photograph', 'cooking ingredients photograph', 'market produce photograph'],
+  'architecture': ['building facade photograph', 'interior architecture photograph', 'bridge photograph'],
+  'patterns': ['natural pattern photograph', 'geometric pattern photograph', 'textile pattern photograph'],
+  'mythology': ['ancient statue photograph', 'temple ruins photograph', 'classical sculpture photograph'],
 };
 
 /**
- * Fetch reference images from the Art Institute of Chicago API
- * Uses Elasticsearch body for tighter relevance matching
+ * Fetch real-world reference photos from Wikimedia Commons
+ * Free, no API key, returns actual photographs
  */
-async function fetchFromArtInstitute(
-  subject: string,
-  medium: string,
-  count: number
-): Promise<ReferenceImage[]> {
-  const subjectTerm = SUBJECT_KEYWORDS[subject] || subject;
-  const mediumTerm = MEDIUM_KEYWORDS[medium] || '';
-
-  // Build an Elasticsearch query focused on subject relevance
-  // Medium is intentionally excluded — images should show WHAT to draw, not HOW
-  const searchBody: any = {
-    fields: ['id', 'title', 'artist_display', 'image_id'],
-    limit: count + 4,
-    query: {
-      bool: {
-        must: [
-          { term: { is_public_domain: true } },
-          {
-            bool: {
-              should: [
-                { match: { subject_titles: { query: subjectTerm, boost: 5 } } },
-                { match: { title: { query: subjectTerm, boost: 3 } } },
-                { match: { description: { query: subjectTerm, boost: 2 } } },
-              ],
-              minimum_should_match: 1,
-            },
-          },
-        ],
-      },
-    },
-  };
-
-  const response = await fetch(
-    'https://api.artic.edu/api/v1/artworks/search',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(searchBody),
-    }
-  );
-
-  if (!response.ok) {
-    // Fallback to simple text search if POST fails
-    return fetchFromArtInstituteSimple(subject, count);
-  }
-
-  const data = await response.json();
-  const artworks = (data.data || [])
-    .filter((art: any) => art.image_id)
-    .slice(0, count);
-
-  if (artworks.length === 0) {
-    return fetchFromArtInstituteSimple(subject, count);
-  }
-
-  return artworks.map((art: any) => ({
-    id: String(art.id),
-    url: `https://www.artic.edu/iiif/2/${art.image_id}/full/600,/0/default.jpg`,
-    thumbUrl: `https://www.artic.edu/iiif/2/${art.image_id}/full/300,/0/default.jpg`,
-    photographer: art.artist_display?.split('\n')[0] || 'Unknown Artist',
-    alt: art.title || 'Artwork',
-  }));
-}
-
-/**
- * Simple GET-based fallback search
- */
-async function fetchFromArtInstituteSimple(
+async function fetchFromWikimediaCommons(
   subject: string,
   count: number
 ): Promise<ReferenceImage[]> {
-  const query = SUBJECT_KEYWORDS[subject] || subject;
+  const queries = SUBJECT_QUERIES[subject] || [subject + ' photograph'];
+  const query = queries[Math.floor(Math.random() * queries.length)];
+  // Random offset for variety
+  const offset = Math.floor(Math.random() * 20);
+
+  const params = new URLSearchParams({
+    action: 'query',
+    generator: 'search',
+    gsrsearch: query,
+    gsrlimit: String(count + 4),
+    gsroffset: String(offset),
+    gsrnamespace: '6', // File namespace only
+    prop: 'imageinfo',
+    iiprop: 'url|extmetadata|size',
+    iiurlwidth: '400',
+    format: 'json',
+    origin: '*',
+  });
 
   const response = await fetch(
-    `https://api.artic.edu/api/v1/artworks/search?q=${encodeURIComponent(query)}&fields=id,title,artist_display,image_id&limit=${count + 2}&query[term][is_public_domain]=true`,
-    { headers: { 'Accept': 'application/json' } }
+    `https://commons.wikimedia.org/w/api.php?${params.toString()}`
   );
 
   if (!response.ok) return [];
 
   const data = await response.json();
-  const artworks = (data.data || [])
-    .filter((art: any) => art.image_id)
-    .slice(0, count);
+  const pages = data.query?.pages;
+  if (!pages) return [];
 
-  return artworks.map((art: any) => ({
-    id: String(art.id),
-    url: `https://www.artic.edu/iiif/2/${art.image_id}/full/600,/0/default.jpg`,
-    thumbUrl: `https://www.artic.edu/iiif/2/${art.image_id}/full/300,/0/default.jpg`,
-    photographer: art.artist_display?.split('\n')[0] || 'Unknown Artist',
-    alt: art.title || 'Artwork',
-  }));
+  const results: ReferenceImage[] = [];
+
+  for (const page of Object.values(pages) as any[]) {
+    if (results.length >= count) break;
+
+    const info = page.imageinfo?.[0];
+    if (!info) continue;
+
+    // Skip non-image files and very small images
+    if (!info.url || info.width < 200 || info.height < 150) continue;
+    // Skip SVGs and icons
+    if (info.url.endsWith('.svg') || info.url.endsWith('.gif')) continue;
+
+    const artist = info.extmetadata?.Artist?.value
+      ?.replace(/<[^>]*>/g, '') // Strip HTML tags
+      ?.substring(0, 40) || 'Wikimedia Commons';
+
+    results.push({
+      id: String(page.pageid),
+      url: info.thumburl || info.url,
+      thumbUrl: info.thumburl || info.url,
+      photographer: artist,
+      alt: page.title?.replace('File:', '').replace(/\.[^.]+$/, '') || 'Reference photo',
+    });
+  }
+
+  return results;
 }
 
 /**
@@ -157,16 +106,9 @@ async function fetchFromUnsplash(
   subject: string,
   count: number
 ): Promise<ReferenceImage[]> {
-  const UNSPLASH_QUERIES: Record<string, string> = {
-    'animals': 'animals wildlife', 'landscapes': 'landscape nature',
-    'people-portraits': 'portrait', 'still-life': 'still life objects',
-    'abstract': 'abstract art', 'urban': 'city urban street',
-    'botanicals': 'flowers plants', 'fantasy': 'fantasy surreal',
-    'food': 'food cuisine', 'architecture': 'architecture building',
-    'patterns': 'patterns texture', 'mythology': 'mythology classical sculpture',
-  };
+  const queries = SUBJECT_QUERIES[subject] || [subject];
+  const query = queries[Math.floor(Math.random() * queries.length)];
 
-  const query = UNSPLASH_QUERIES[subject] || subject;
   const response = await fetch(
     `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&orientation=landscape&content_filter=high`,
     { headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` } }
@@ -185,15 +127,15 @@ async function fetchFromUnsplash(
 }
 
 /**
- * Fetch reference images for a prompt
- * Tries Unsplash first (if key available), then Art Institute of Chicago
+ * Fetch reference photos for a prompt
+ * Returns real photographs of the subject matter for artist reference
  */
 export async function fetchReferenceImages(
   subject: string,
-  medium: string,
+  _medium: string,
   count: number = 3
 ): Promise<ReferenceImage[]> {
-  // Try Unsplash API first if key is available
+  // Try Unsplash first if key is available
   if (UNSPLASH_ACCESS_KEY) {
     try {
       const results = await fetchFromUnsplash(subject, count);
@@ -203,9 +145,9 @@ export async function fetchReferenceImages(
     }
   }
 
-  // Use Art Institute of Chicago (free, no key needed, real artwork)
+  // Use Wikimedia Commons (free, no key, real photographs)
   try {
-    return await fetchFromArtInstitute(subject, medium, count);
+    return await fetchFromWikimediaCommons(subject, count);
   } catch {
     return [];
   }

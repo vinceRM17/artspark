@@ -293,7 +293,7 @@ export default function Home() {
                     })}
                   </View>
                   <Text className="text-[10px] text-gray-300 text-right">
-                    Artwork from Art Institute of Chicago
+                    Reference photos
                   </Text>
                 </>
               )}
