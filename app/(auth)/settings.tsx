@@ -29,6 +29,7 @@ import {
   COLOR_PALETTE_OPTIONS,
   SUBJECT_OPTIONS,
 } from '@/lib/constants/preferences';
+import { DIFFICULTY_OPTIONS, DifficultyLevel } from '@/lib/constants/difficulty';
 import SettingSection from '@/components/settings/SettingSection';
 import SettingRow from '@/components/settings/SettingRow';
 import NotificationTimePicker from '@/components/settings/NotificationTimePicker';
@@ -50,6 +51,7 @@ export default function Settings() {
   const [colorPalettes, setColorPalettes] = useState<string[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
   const [exclusions, setExclusions] = useState<string[]>([]);
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('intermediate');
   const [savingPreferences, setSavingPreferences] = useState(false);
   const [resettingHistory, setResettingHistory] = useState(false);
   const [editingSection, setEditingSection] = useState<string | null>(null);
@@ -75,6 +77,7 @@ export default function Settings() {
           setColorPalettes(prefs.color_palettes);
           setSubjects(prefs.subjects);
           setExclusions(prefs.exclusions);
+          if (prefs.difficulty) setDifficulty(prefs.difficulty as DifficultyLevel);
 
           // Parse notification_time (HH:MM:SS) into hour and minute
           if (prefs.notification_time) {
@@ -205,6 +208,7 @@ export default function Settings() {
         color_palettes: colorPalettes,
         subjects: subjects,
         exclusions: filteredExclusions,
+        difficulty: difficulty,
       });
       setExclusions(filteredExclusions);
       setEditingSection(null);
@@ -213,7 +217,7 @@ export default function Settings() {
     } finally {
       setSavingPreferences(false);
     }
-  }, [mediums, colorPalettes, subjects, exclusions, userId]);
+  }, [mediums, colorPalettes, subjects, exclusions, difficulty, userId]);
 
   const handleResetHistory = useCallback(async () => {
     setResettingHistory(true);
@@ -320,11 +324,65 @@ export default function Settings() {
         />
       </SettingSection>
 
-      {/* Section 2: Art Preferences */}
-      <SettingSection title="Art Preferences">
+      {/* Section 2: Difficulty */}
+      <SettingSection title="Skill Level">
         <SettingRow
-          label="Mediums"
-          description={`${mediums.length} selected`}
+          label="Difficulty"
+          description={DIFFICULTY_OPTIONS.find(d => d.id === difficulty)?.label || 'Intermediate'}
+          onPress={() =>
+            setEditingSection(editingSection === 'difficulty' ? null : 'difficulty')
+          }
+          rightElement={
+            <Text className="text-gray-400 text-sm">
+              {editingSection === 'difficulty' ? 'Close' : 'Change'}
+            </Text>
+          }
+        />
+        {editingSection === 'difficulty' && (
+          <View className="px-4 py-3 bg-gray-50">
+            {DIFFICULTY_OPTIONS.map((option) => {
+              const selected = difficulty === option.id;
+              return (
+                <TouchableOpacity
+                  key={option.id}
+                  onPress={() => setDifficulty(option.id)}
+                  className="mb-2 rounded-xl border p-4"
+                  style={{
+                    borderColor: selected ? '#7C9A72' : '#E5E7EB',
+                    backgroundColor: selected ? '#F0F5EE' : '#FFFFFF',
+                  }}
+                >
+                  <Text
+                    className="font-semibold text-base"
+                    style={{ color: selected ? '#7C9A72' : '#374151' }}
+                  >
+                    {option.label}
+                  </Text>
+                  <Text className="text-xs text-gray-400 mt-1">
+                    {option.description}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+            <TouchableOpacity
+              onPress={handleSavePreferences}
+              disabled={savingPreferences}
+              className="bg-[#7C9A72] rounded-lg py-2.5 mt-2"
+              activeOpacity={0.7}
+            >
+              <Text className="text-white text-center font-semibold">
+                {savingPreferences ? 'Saving...' : 'Save'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </SettingSection>
+
+      {/* Section 3: Art Supplies & Preferences */}
+      <SettingSection title="My Supplies & Preferences">
+        <SettingRow
+          label="Art Supplies"
+          description={`${mediums.length} materials on hand`}
           onPress={() =>
             setEditingSection(editingSection === 'mediums' ? null : 'mediums')
           }
@@ -404,7 +462,7 @@ export default function Settings() {
         )}
       </SettingSection>
 
-      {/* Section 3: Subscription */}
+      {/* Section 4: Subscription */}
       <SettingSection title="Subscription">
         <SettingRow
           label="ArtSpark Pro"
@@ -420,7 +478,7 @@ export default function Settings() {
         />
       </SettingSection>
 
-      {/* Section 4: Account */}
+      {/* Section 5: Account */}
       <SettingSection title="Account">
         <SettingRow
           label="Email"
@@ -433,7 +491,7 @@ export default function Settings() {
         />
       </SettingSection>
 
-      {/* Section 5: Danger Zone */}
+      {/* Section 6: Danger Zone */}
       <DangerZone
         onResetHistory={handleResetHistory}
         resetting={resettingHistory}

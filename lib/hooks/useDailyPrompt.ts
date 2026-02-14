@@ -13,6 +13,7 @@ import { Prompt } from '@/lib/schemas/prompts';
 import { useSession } from '@/components/auth/SessionProvider';
 import { getTwistsForMedium } from '@/lib/constants/twists';
 import { getPromptTemplate } from '@/lib/constants/promptTemplates';
+import { getDifficultyOption, DifficultyLevel } from '@/lib/constants/difficulty';
 
 const ONBOARDING_KEY = '@artspark:onboarding-progress';
 const DEV_PREFS_KEY = '@artspark:dev-preferences';
@@ -22,6 +23,7 @@ type DevPreferences = {
   subjects: string[];
   exclusions: string[];
   colorPalettes: string[];
+  difficulty: DifficultyLevel;
 };
 
 const DEFAULT_DEV_PREFS: DevPreferences = {
@@ -29,6 +31,7 @@ const DEFAULT_DEV_PREFS: DevPreferences = {
   subjects: ['botanicals', 'landscapes', 'animals'],
   exclusions: [],
   colorPalettes: [],
+  difficulty: 'intermediate',
 };
 
 /**
@@ -47,6 +50,7 @@ async function loadDevPreferences(): Promise<DevPreferences> {
           subjects: progress.subjects || DEFAULT_DEV_PREFS.subjects,
           exclusions: progress.exclusions || [],
           colorPalettes: progress.colorPalettes || [],
+          difficulty: progress.difficulty || 'intermediate',
         };
         // Cache for future use
         await AsyncStorage.setItem(DEV_PREFS_KEY, JSON.stringify(prefs));
@@ -85,9 +89,10 @@ function generateDevPrompt(prefs: DevPreferences, source: 'daily' | 'manual'): P
     ? randomItem(prefs.colorPalettes)
     : null;
 
-  // Twist: ~50% chance, medium-compatible
+  // Twist: chance based on difficulty, medium-compatible
+  const difficulty = getDifficultyOption(prefs.difficulty);
   const compatibleTwists = getTwistsForMedium(medium);
-  const twist = Math.random() < 0.5 && compatibleTwists.length > 0
+  const twist = Math.random() < difficulty.twistChance && compatibleTwists.length > 0
     ? randomItem(compatibleTwists).text
     : null;
 

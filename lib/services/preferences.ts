@@ -45,6 +45,7 @@ export type UserPreferences = {
   color_palettes: string[];
   subjects: string[];
   exclusions: string[];
+  difficulty: string; // 'beginner' | 'intermediate' | 'advanced'
   notification_time: string; // HH:MM:SS format
   notification_enabled: boolean;
   created_at: string;

@@ -18,6 +18,7 @@ type OnboardingProgress = {
   colorPalettes?: string[];
   subjects?: string[];
   exclusions?: string[];
+  difficulty?: string;
 };
 
 export default function Step5() {
@@ -73,6 +74,7 @@ export default function Step5() {
           color_palettes: progress.colorPalettes || [],
           subjects: progress.subjects || [],
           exclusions: progress.exclusions || [],
+          difficulty: progress.difficulty || 'intermediate',
           notification_time: formattedTime,
           notification_enabled: permissionGranted,
           onboarding_completed: true,

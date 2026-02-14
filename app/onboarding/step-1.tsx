@@ -88,8 +88,8 @@ export default function OnboardingStep1() {
     <OnboardingLayout
       step={1}
       totalSteps={5}
-      title="What do you create with?"
-      subtitle="Pick the mediums you love working in. You can always change these later."
+      title="What supplies do you have?"
+      subtitle="Select the art materials you have on hand. We'll only suggest prompts you can actually do."
       onNext={handleSubmit(onSubmit)}
       nextDisabled={selectedMediums.length === 0}
     >

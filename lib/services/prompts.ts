@@ -10,6 +10,7 @@ import { getPreferences, UserPreferences } from './preferences';
 import { MEDIUM_OPTIONS, SUBJECT_OPTIONS, COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
 import { getTwistsForMedium } from '@/lib/constants/twists';
 import { getPromptTemplate } from '@/lib/constants/promptTemplates';
+import { getDifficultyOption } from '@/lib/constants/difficulty';
 import { Prompt, PromptWithStatus } from '@/lib/schemas/prompts';
 
 // Re-export Prompt type for convenience
@@ -136,15 +137,18 @@ async function generatePrompt(
   );
   const subject = randomItem(eligibleSubjects);
 
+  // Get difficulty settings
+  const difficulty = getDifficultyOption(preferences.difficulty || 'intermediate');
+
   // Color rule: ~40% chance if user has color preferences
   const color_rule =
     preferences.color_palettes && preferences.color_palettes.length > 0 && Math.random() < 0.4
       ? randomItem(preferences.color_palettes)
       : null;
 
-  // Twist: ~50% chance, filtered to medium-compatible twists
+  // Twist: chance based on difficulty level, filtered to medium-compatible twists
   const compatibleTwists = getTwistsForMedium(medium);
-  const twist = Math.random() < 0.5 && compatibleTwists.length > 0
+  const twist = Math.random() < difficulty.twistChance && compatibleTwists.length > 0
     ? randomItem(compatibleTwists).text
     : null;
 
