@@ -73,6 +73,27 @@ export default function AuthLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="gallery"
+        options={{
+          title: 'My Gallery',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="challenges"
+        options={{
+          title: 'Challenges',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="challenges/[id]"
+        options={{
+          title: 'Challenge',
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 }

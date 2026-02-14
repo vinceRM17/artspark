@@ -32,6 +32,10 @@ import LeafCorner from '@/components/botanical/LeafCorner';
 import VineDivider from '@/components/botanical/VineDivider';
 import FloatingLeaves from '@/components/botanical/FloatingLeaves';
 import FeedbackModal from '@/components/prompts/FeedbackModal';
+import StreakCounter from '@/components/streaks/StreakCounter';
+import ChallengeCard from '@/components/challenges/ChallengeCard';
+import { useStreak } from '@/lib/hooks/useStreak';
+import { useChallenges } from '@/lib/hooks/useChallenges';
 
 const { width: screenWidth } = Dimensions.get('window');
 const FREE_PROMPT_KEY = '@artspark:free-prompt-count';
@@ -43,6 +47,8 @@ function getLabel(options: { id: string; label: string }[], id: string): string 
 
 export default function Home() {
   const { prompt, loading, error, generating, generateManualPrompt } = useDailyPrompt();
+  const { streak, loading: streakLoading } = useStreak();
+  const { active: activeChallenges } = useChallenges();
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
@@ -231,6 +237,14 @@ export default function Home() {
               {prompt.source === 'daily' ? "Today's Prompt" : 'Extra Prompt'}
             </Text>
           </View>
+
+          {/* Streak Counter */}
+          {!streakLoading && <StreakCounter streak={streak} />}
+
+          {/* Active Challenge Card */}
+          {activeChallenges.length > 0 && (
+            <ChallengeCard activeChallenge={activeChallenges[0]} />
+          )}
 
           {/* Main Prompt Card with leaf corners */}
           <View className="bg-white rounded-2xl p-6 shadow-sm mb-4 overflow-hidden">
@@ -437,6 +451,26 @@ export default function Home() {
                 View History
               </Text>
             </TouchableOpacity>
+
+            {/* Gallery & Challenges row */}
+            <View className="flex-row mt-3" style={{ gap: 10 }}>
+              <TouchableOpacity
+                className="flex-1 bg-white border-2 border-[#7C9A72] rounded-xl py-4"
+                onPress={() => router.push('/(auth)/gallery')}
+              >
+                <Text className="text-[#7C9A72] text-center text-base font-semibold">
+                  My Gallery
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 bg-white border-2 border-[#7C9A72] rounded-xl py-4"
+                onPress={() => router.push('/(auth)/challenges')}
+              >
+                <Text className="text-[#7C9A72] text-center text-base font-semibold">
+                  Challenges
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Settings Link */}
             <TouchableOpacity

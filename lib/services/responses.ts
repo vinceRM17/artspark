@@ -8,6 +8,8 @@
 import { supabase } from '@/lib/supabase';
 import { Response, CreateResponseInput } from '@/lib/schemas/response';
 import { uploadResponseImages } from './imageUpload';
+import { recalculateStreak } from './streaks';
+import { invalidateGalleryCache } from '@/lib/hooks/useGallery';
 
 /**
  * Create a new response
@@ -51,6 +53,14 @@ export async function createResponse(
 
     if (!data) {
       throw new Error('Insert succeeded but no data returned');
+    }
+
+    // Recalculate streak and invalidate gallery cache after successful response
+    try {
+      await recalculateStreak(userId);
+      await invalidateGalleryCache();
+    } catch {
+      // Non-critical — don't fail the response if streak/cache update fails
     }
 
     return data as Response;
