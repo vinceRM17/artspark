@@ -75,7 +75,12 @@ export default function StreakCounter({ streak }: StreakCounterProps) {
   }));
 
   return (
-    <View className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+    <View
+      className="bg-white rounded-xl p-4 mb-4 shadow-sm"
+      accessible={true}
+      accessibilityRole="text"
+      accessibilityLabel={`${currentStreak} day streak. Longest streak: ${streak.longestStreak} days`}
+    >
       <View className="flex-row items-center justify-between">
         {/* Current streak */}
         <View className="flex-row items-center">

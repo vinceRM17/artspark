@@ -152,7 +152,15 @@ export function getPromptTemplate(
   const mediumLabel = mediumLabels[medium] || medium;
   const subjectLabel = subjectLabels[subject] || subject;
 
-  return template.template
+  let text = template.template
     .replace('{medium}', mediumLabel)
     .replace('{subject}', subjectLabel);
+
+  // Fix a/an: "a ink" → "an ink", "a oil paint" → "an oil paint", etc.
+  text = text.replace(/\b(a) ([aeiou])/gi, (_match, article, vowel) => {
+    const an = article[0] === 'A' ? 'An' : 'an';
+    return `${an} ${vowel}`;
+  });
+
+  return text;
 }

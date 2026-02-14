@@ -11,7 +11,13 @@ type ProgressIndicatorProps = {
  */
 export default function ProgressIndicator({ currentStep, totalSteps }: ProgressIndicatorProps) {
   return (
-    <View className="items-center py-6">
+    <View
+      className="items-center py-6"
+      accessible={true}
+      accessibilityRole="progressbar"
+      accessibilityLabel={`Step ${currentStep} of ${totalSteps}`}
+      accessibilityValue={{ min: 1, max: totalSteps, now: currentStep }}
+    >
       {/* Dot row */}
       <View className="flex-row gap-2 mb-2">
         {Array.from({ length: totalSteps }, (_, i) => {

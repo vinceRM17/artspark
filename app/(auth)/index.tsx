@@ -42,6 +42,7 @@ import { useChallenges } from '@/lib/hooks/useChallenges';
 import { useBadges } from '@/lib/hooks/useBadges';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import { hapticLight, hapticMedium } from '@/lib/utils/haptics';
+import { useIsBookmarked } from '@/lib/hooks/useBookmarks';
 
 const { width: screenWidth } = Dimensions.get('window');
 const FREE_PROMPT_KEY = '@artspark:free-prompt-count';
@@ -63,6 +64,7 @@ export default function Home() {
   const { active: activeChallenges } = useChallenges();
   const { unlockedCount, totalCount } = useBadges();
   const { colors } = useTheme();
+  const { bookmarked, toggle: toggleBookmark } = useIsBookmarked(prompt?.id);
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
@@ -243,6 +245,20 @@ export default function Home() {
                 <LeafCorner position="topRight" size={80} opacity={0.08} />
                 <LeafCorner position="bottomLeft" size={60} opacity={0.06} />
 
+                {/* Bookmark button */}
+                <TouchableOpacity
+                  onPress={() => { hapticLight(); if (prompt) toggleBookmark(prompt); }}
+                  style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, padding: 4 }}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Save prompt'}
+                  accessibilityState={{ selected: bookmarked }}
+                >
+                  <Text style={{ fontSize: 22, opacity: bookmarked ? 1 : 0.3 }}>
+                    {'\uD83D\uDD16'}
+                  </Text>
+                </TouchableOpacity>
+
                 {/* Prompt text — large & inviting */}
                 <Text style={{
                   fontSize: 26,
@@ -322,6 +338,9 @@ export default function Home() {
                       });
                     }}
                     activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel="Add to my portfolio"
+                    accessibilityHint="Opens the camera to create art for this prompt"
                   >
                     <Text style={{ color: '#FFF', textAlign: 'center', fontSize: 17, fontWeight: '700', letterSpacing: 0.3 }}>
                       Add to My Portfolio
@@ -344,6 +363,9 @@ export default function Home() {
                 }}>
                   <TouchableOpacity
                     onPress={handleThumbsUp}
+                    accessibilityRole="button"
+                    accessibilityLabel="Love this prompt"
+                    accessibilityState={{ selected: liked === true }}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -363,6 +385,9 @@ export default function Home() {
 
                   <TouchableOpacity
                     onPress={handleThumbsDown}
+                    accessibilityRole="button"
+                    accessibilityLabel="Dislike this prompt"
+                    accessibilityHint="Opens feedback dialog to improve future prompts"
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -546,7 +571,27 @@ export default function Home() {
                 activeOpacity={0.7}
               >
                 <Text style={{ fontSize: 22, marginBottom: 4 }}>{'\uD83D\uDDBC\uFE0F'}</Text>
-                <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>Gallery</Text>
+                <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>Gallery</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  backgroundColor: colors.surface,
+                  borderRadius: 14,
+                  paddingVertical: 18,
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOpacity: 0.04,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 2 },
+                  elevation: 1,
+                }}
+                onPress={() => router.push('/(auth)/bookmarks')}
+                activeOpacity={0.7}
+              >
+                <Text style={{ fontSize: 22, marginBottom: 4 }}>{'\uD83D\uDD16'}</Text>
+                <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>Saved</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -566,7 +611,7 @@ export default function Home() {
                 activeOpacity={0.7}
               >
                 <Text style={{ fontSize: 22, marginBottom: 4 }}>{'\u26A1'}</Text>
-                <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>Challenges</Text>
+                <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>Challenges</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -586,7 +631,7 @@ export default function Home() {
                 activeOpacity={0.7}
               >
                 <Text style={{ fontSize: 22, marginBottom: 4 }}>{'\uD83D\uDCDC'}</Text>
-                <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>History</Text>
+                <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>History</Text>
               </TouchableOpacity>
             </View>
 

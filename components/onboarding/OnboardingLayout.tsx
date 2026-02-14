@@ -49,6 +49,8 @@ export default function OnboardingLayout({
           onPress={onBack}
           className="px-6 pt-3 pb-1"
           activeOpacity={0.6}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Text className="text-[#7C9A72] text-base">{'\u2190'} Back</Text>
         </TouchableOpacity>
@@ -82,6 +84,9 @@ export default function OnboardingLayout({
           style={{ backgroundColor: nextDisabled ? '#D1D5DB' : '#7C9A72' }}
           className="py-4 rounded-xl items-center justify-center"
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={nextLabel}
+          accessibilityState={{ disabled: nextDisabled }}
         >
           <Text style={{ color: nextDisabled ? '#6B7280' : '#FFFFFF' }} className="text-lg font-semibold">
             {nextLabel}
@@ -90,7 +95,13 @@ export default function OnboardingLayout({
 
         {/* Optional skip button */}
         {showSkip && onSkip && (
-          <TouchableOpacity onPress={onSkip} className="mt-3 items-center py-2" activeOpacity={0.6}>
+          <TouchableOpacity
+            onPress={onSkip}
+            className="mt-3 items-center py-2"
+            activeOpacity={0.6}
+            accessibilityRole="button"
+            accessibilityLabel="Skip this step"
+          >
             <Text className="text-base text-gray-500">Skip this step</Text>
           </TouchableOpacity>
         )}

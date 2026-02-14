@@ -12,6 +12,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const STORAGE_KEY = '@artspark:onboarding-progress';
+const DEV_PREFS_KEY = '@artspark:dev-preferences';
 
 type OnboardingProgress = {
   mediums?: string[];
@@ -79,6 +80,17 @@ export default function Step6() {
           notification_enabled: permissionGranted,
           onboarding_completed: true,
         });
+      }
+
+      // In dev mode, cache preferences locally so they survive onboarding cleanup
+      if (__DEV__) {
+        await AsyncStorage.setItem(DEV_PREFS_KEY, JSON.stringify({
+          mediums: progress.mediums || [],
+          subjects: progress.subjects || [],
+          exclusions: progress.exclusions || [],
+          colorPalettes: progress.colorPalettes || [],
+          difficulty: progress.difficulty || 'developing',
+        }));
       }
 
       // Schedule notification if permission granted

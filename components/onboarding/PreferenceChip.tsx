@@ -14,6 +14,9 @@ export default function PreferenceChip({ label, selected, onPress }: PreferenceC
   return (
     <TouchableOpacity
       onPress={onPress}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: selected }}
+      accessibilityLabel={label}
       className={`
         px-4 py-2.5 rounded-full min-h-[44px] items-center justify-center
         ${

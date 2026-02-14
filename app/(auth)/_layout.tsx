@@ -2,6 +2,7 @@ import { Redirect, Stack } from 'expo-router';
 import { useSession } from '@/components/auth/SessionProvider';
 import { useOnboardingStatus } from '@/lib/hooks/useOnboardingStatus';
 import { View, ActivityIndicator } from 'react-native';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default function AuthLayout() {
   const { session, isLoading } = useSession();
@@ -37,6 +38,7 @@ export default function AuthLayout() {
   }
 
   return (
+    <ErrorBoundary>
     <Stack>
       <Stack.Screen
         name="index"
@@ -101,6 +103,28 @@ export default function AuthLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="bookmarks"
+        options={{
+          title: 'Saved Prompts',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="recap"
+        options={{
+          title: 'Weekly Recap',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="packs"
+        options={{
+          title: 'Prompt Packs',
+          headerShown: true,
+        }}
+      />
     </Stack>
+    </ErrorBoundary>
   );
 }
