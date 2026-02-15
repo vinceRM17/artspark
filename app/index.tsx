@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { Platform } from 'react-native';
 import { useSession } from '@/components/auth/SessionProvider';
 import { useOnboardingStatus } from '@/lib/hooks/useOnboardingStatus';
 import { View, ActivityIndicator } from 'react-native';
@@ -6,6 +7,11 @@ import { View, ActivityIndicator } from 'react-native';
 export default function Index() {
   const { session, isLoading } = useSession();
   const { onboardingComplete, loading: onboardingLoading } = useOnboardingStatus();
+
+  // Web demo: skip auth and onboarding, go straight to app
+  if (Platform.OS === 'web') {
+    return <Redirect href="/(auth)" />;
+  }
 
   // Dev bypass: check onboarding status with AsyncStorage bypass support
   if (__DEV__) {
