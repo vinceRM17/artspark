@@ -5,7 +5,7 @@
  * Badges are computed from existing data (no new DB table needed).
  */
 
-export type BadgeCategory = 'milestone' | 'streak' | 'exploration' | 'challenge';
+export type BadgeCategory = 'milestone' | 'streak' | 'exploration';
 
 export type BadgeDefinition = {
   id: string;
@@ -22,8 +22,6 @@ export type BadgeStats = {
   currentStreak: number;
   longestStreak: number;
   mediumsUsed: number;
-  challengesCompleted: number;
-  challengeDaysCompleted: number;
 };
 
 export const BADGES: BadgeDefinition[] = [
@@ -113,23 +111,6 @@ export const BADGES: BadgeDefinition[] = [
     check: (s) => s.mediumsUsed >= 8,
   },
 
-  // Challenge badges
-  {
-    id: 'challenger',
-    name: 'Challenger',
-    description: 'Complete your first challenge',
-    icon: '\uD83C\uDFF3\uFE0F',
-    category: 'challenge',
-    check: (s) => s.challengesCompleted >= 1,
-  },
-  {
-    id: 'champion',
-    name: 'Champion',
-    description: 'Complete 3 challenges',
-    icon: '\uD83E\uDD47',
-    category: 'challenge',
-    check: (s) => s.challengesCompleted >= 3,
-  },
 ];
 
 export const TOTAL_BADGES = BADGES.length;

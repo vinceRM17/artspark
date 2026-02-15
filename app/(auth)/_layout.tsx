@@ -83,13 +83,7 @@ export default function AuthLayout() {
           headerShown: true,
         }}
       />
-      <Stack.Screen
-        name="challenges/[id]"
-        options={{
-          title: 'Challenge',
-          headerShown: true,
-        }}
-      />
+      {/* Challenges shelved — revisit later */}
       <Stack.Screen
         name="badges"
         options={{

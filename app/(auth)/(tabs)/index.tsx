@@ -36,9 +36,7 @@ import VineDivider from '@/components/botanical/VineDivider';
 import FloatingLeaves from '@/components/botanical/FloatingLeaves';
 import FeedbackModal from '@/components/prompts/FeedbackModal';
 import StreakCounter from '@/components/streaks/StreakCounter';
-import ChallengeCard from '@/components/challenges/ChallengeCard';
 import { useStreak } from '@/lib/hooks/useStreak';
-import { useChallenges } from '@/lib/hooks/useChallenges';
 import { useBadges } from '@/lib/hooks/useBadges';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import { hapticLight, hapticMedium } from '@/lib/utils/haptics';
@@ -62,7 +60,6 @@ function getGreeting(): string {
 export default function Home() {
   const { prompt, loading, error, generating, isRestDay, generateManualPrompt } = useDailyPrompt();
   const { streak, loading: streakLoading } = useStreak();
-  const { active: activeChallenges } = useChallenges();
   const { unlockedCount, totalCount } = useBadges();
   const { colors } = useTheme();
   const { bookmarked, toggle: toggleBookmark } = useIsBookmarked(prompt?.id);
@@ -658,13 +655,6 @@ export default function Home() {
               </Text>
             </TouchableOpacity>
           </Animated.View>
-
-          {/* ── Active Challenge ── */}
-          {activeChallenges.length > 0 && (
-            <Animated.View entering={FadeInDown.duration(500).delay(400)} style={{ marginBottom: 16 }}>
-              <ChallengeCard activeChallenge={activeChallenges[0]} />
-            </Animated.View>
-          )}
 
           {/* ── Free tier upgrade prompt ── */}
           {userTier === 'free' && freePromptUsed && !__DEV__ && (

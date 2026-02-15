@@ -13,14 +13,12 @@ const CATEGORY_LABELS: Record<BadgeCategory, string> = {
   milestone: 'Milestones',
   streak: 'Streaks',
   exploration: 'Exploration',
-  challenge: 'Challenges',
 };
 
 const CATEGORY_ORDER: BadgeCategory[] = [
   'milestone',
   'streak',
   'exploration',
-  'challenge',
 ];
 
 export default function BadgesScreen() {

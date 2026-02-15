@@ -38,10 +38,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="challenges"
         options={{
-          title: 'Challenges',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="flash-outline" size={size} color={color} />
-          ),
+          href: null, // Shelved — revisit later
         }}
       />
       <Tabs.Screen
