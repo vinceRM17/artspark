@@ -670,14 +670,23 @@ export default function Home() {
             <VineDivider width={180} opacity={0.12} />
           </View>
 
-          {/* ── View Prompt History link ── */}
+          {/* ── Quick links ── */}
+          <TouchableOpacity
+            onPress={() => router.push('/(auth)/bookmarks')}
+            activeOpacity={0.7}
+            style={{ alignItems: 'center', paddingVertical: 12 }}
+          >
+            <Text style={{ color: colors.primary, fontSize: 14, fontWeight: '600' }}>
+              Saved Prompts {'\u203A'}
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => router.push('/(auth)/history')}
             activeOpacity={0.7}
             style={{ alignItems: 'center', paddingVertical: 12 }}
           >
             <Text style={{ color: colors.primary, fontSize: 14, fontWeight: '600' }}>
-              View Prompt History {'\u203A'}
+              Prompt History {'\u203A'}
             </Text>
           </TouchableOpacity>
         </View>
