@@ -43,6 +43,7 @@ import { useBadges } from '@/lib/hooks/useBadges';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import { hapticLight, hapticMedium } from '@/lib/utils/haptics';
 import { useIsBookmarked } from '@/lib/hooks/useBookmarks';
+import { useAnalytics } from '@/lib/hooks/useAnalytics';
 
 const { width: screenWidth } = Dimensions.get('window');
 const FREE_PROMPT_KEY = '@artspark:free-prompt-count';
@@ -74,6 +75,7 @@ export default function Home() {
   const [freePromptUsed, setFreePromptUsed] = useState(false);
 
   const { session } = useSession();
+  const { track } = useAnalytics();
   const userId = session?.user?.id;
   const greeting = useMemo(() => getGreeting(), []);
 
@@ -122,6 +124,13 @@ export default function Home() {
       // Reset images when prompt changes — user must request them
       setReferenceImages([]);
       setImagesLoading(false);
+      track('prompt_generated', {
+        prompt_id: prompt.id,
+        medium: prompt.medium,
+        has_twist: !!prompt.twist,
+        has_color_rule: !!prompt.color_rule,
+        source: prompt.source,
+      });
     }
   }, [prompt?.id]);
 
@@ -129,13 +138,25 @@ export default function Home() {
     if (!prompt || imagesLoading) return;
     setImagesLoading(true);
     fetchReferenceImages(prompt.subject, prompt.medium, 3)
-      .then(setReferenceImages)
+      .then((imgs) => {
+        setReferenceImages(imgs);
+        track('reference_images_loaded', { count: imgs.length, medium: prompt.medium });
+      })
       .catch(() => setReferenceImages([]))
       .finally(() => setImagesLoading(false));
   };
 
-  const handleThumbsUp = () => { hapticLight(); setLiked(true); };
-  const handleThumbsDown = () => { if (!prompt) return; hapticLight(); setFeedbackVisible(true); };
+  const handleThumbsUp = () => {
+    hapticLight();
+    setLiked(true);
+    if (prompt) track('prompt_liked', { prompt_id: prompt.id, medium: prompt.medium });
+  };
+  const handleThumbsDown = () => {
+    if (!prompt) return;
+    hapticLight();
+    setFeedbackVisible(true);
+    track('prompt_disliked', { prompt_id: prompt.id, medium: prompt.medium });
+  };
 
   const handleFeedbackSubmit = async (
     reasons: ('subject' | 'medium' | 'twist' | 'other')[],
@@ -308,7 +329,13 @@ export default function Home() {
 
                 {/* Bookmark button */}
                 <TouchableOpacity
-                  onPress={() => { hapticLight(); if (prompt) toggleBookmark(prompt); }}
+                  onPress={() => {
+                    hapticLight();
+                    if (prompt) {
+                      if (!bookmarked) track('bookmark_added', { prompt_id: prompt.id });
+                      toggleBookmark(prompt);
+                    }
+                  }}
                   style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, padding: 4 }}
                   activeOpacity={0.7}
                   accessibilityRole="button"

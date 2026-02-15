@@ -41,6 +41,7 @@ import NotificationTimePicker from '@/components/settings/NotificationTimePicker
 import DangerZone from '@/components/settings/DangerZone';
 import ChipGrid from '@/components/onboarding/ChipGrid';
 import { useTheme, type ThemeMode } from '@/lib/theme/ThemeContext';
+import { useAnalytics } from '@/lib/hooks/useAnalytics';
 
 const THEME_OPTIONS: { id: ThemeMode; label: string; description: string }[] = [
   { id: 'light', label: 'Light', description: 'Always use light mode' },
@@ -61,6 +62,7 @@ export default function Settings() {
   const { session, signOut } = useSession();
   const userId = session?.user?.id || (__DEV__ ? 'dev-user' : '');
   const { colors, mode: themeMode, setMode: setThemeMode } = useTheme();
+  const { track } = useAnalytics();
 
   // State
   const [loading, setLoading] = useState(true);
@@ -152,6 +154,7 @@ export default function Settings() {
     async (value: boolean) => {
       const previousValue = notificationEnabled;
       setNotificationEnabled(value);
+      track('setting_changed', { setting: 'notifications', value });
 
       try {
         if (value) {
@@ -211,10 +214,11 @@ export default function Settings() {
   const handleFrequencyChange = useCallback(
     async (frequency: PromptFrequency) => {
       setPromptFrequency(frequency);
+      track('setting_changed', { setting: 'prompt_frequency', value: frequency });
       await AsyncStorage.setItem('@artspark:prompt-frequency', frequency);
       setEditingSection(null);
     },
-    []
+    [track]
   );
 
   const handleTogglePreference = useCallback(
@@ -543,7 +547,10 @@ export default function Settings() {
               return (
                 <TouchableOpacity
                   key={option.id}
-                  onPress={() => setThemeMode(option.id)}
+                  onPress={() => {
+                    setThemeMode(option.id);
+                    track('setting_changed', { setting: 'theme', value: option.id });
+                  }}
                   className="mb-2 rounded-xl border p-4"
                   style={{
                     borderColor: selected ? '#7C9A72' : '#E5E7EB',
@@ -587,7 +594,10 @@ export default function Settings() {
               return (
                 <TouchableOpacity
                   key={option.id}
-                  onPress={() => setDifficulty(option.id)}
+                  onPress={() => {
+                    setDifficulty(option.id);
+                    track('setting_changed', { setting: 'difficulty', value: option.id });
+                  }}
                   className="mb-2 rounded-xl border p-4"
                   style={{
                     borderColor: selected ? '#7C9A72' : '#E5E7EB',

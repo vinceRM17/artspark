@@ -1,12 +1,30 @@
-import { Redirect, Stack } from 'expo-router';
+import { useEffect, useRef } from 'react';
+import { Redirect, Stack, usePathname } from 'expo-router';
+import * as Sentry from '@sentry/react-native';
 import { useSession } from '@/components/auth/SessionProvider';
 import { useOnboardingStatus } from '@/lib/hooks/useOnboardingStatus';
+import { useAnalytics } from '@/lib/hooks/useAnalytics';
 import { View, ActivityIndicator } from 'react-native';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default function AuthLayout() {
   const { session, isLoading } = useSession();
   const { onboardingComplete, loading: onboardingLoading } = useOnboardingStatus();
+  const pathname = usePathname();
+  const { track } = useAnalytics();
+  const prevPathname = useRef(pathname);
+
+  useEffect(() => {
+    if (pathname && pathname !== prevPathname.current) {
+      track('screen_view', { screen: pathname });
+      Sentry.addBreadcrumb({
+        category: 'navigation',
+        message: `Navigated to ${pathname}`,
+        level: 'info',
+      });
+      prevPathname.current = pathname;
+    }
+  }, [pathname, track]);
 
   // Show loading spinner while checking session
   if (isLoading) {

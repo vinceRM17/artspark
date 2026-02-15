@@ -24,10 +24,12 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { getChallengeById } from '@/lib/constants/challenges';
 import { useChallenges } from '@/lib/hooks/useChallenges';
 import { hapticSuccess, hapticMedium } from '@/lib/utils/haptics';
+import { useAnalytics } from '@/lib/hooks/useAnalytics';
 
 export default function ChallengeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { active, loading, join, leave } = useChallenges();
+  const { track } = useAnalytics();
   const [actionLoading, setActionLoading] = useState(false);
 
   const challenge = getChallengeById(id || '');
@@ -83,6 +85,11 @@ export default function ChallengeDetailScreen() {
     try {
       setActionLoading(true);
       await join(challenge.id);
+      track('challenge_joined', {
+        challenge_id: challenge.id,
+        type: challenge.type,
+        duration: challenge.duration,
+      });
       await hapticSuccess();
     } catch {
       Alert.alert('Error', 'Could not join challenge. Please try again.');
@@ -117,6 +124,10 @@ export default function ChallengeDetailScreen() {
 
   const handleCompleteToday = () => {
     hapticMedium();
+    track('challenge_day_completed', {
+      challenge_id: challenge.id,
+      day: currentDay,
+    });
     router.push({
       pathname: '/(auth)/respond',
       params: {

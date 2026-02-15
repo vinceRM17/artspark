@@ -24,6 +24,7 @@ import { invalidateHistoryCache } from '@/lib/hooks/usePromptHistory';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import { hapticMedium, hapticSuccess } from '@/lib/utils/haptics';
 import ShareModal from '@/components/share/ShareModal';
+import { useAnalytics } from '@/lib/hooks/useAnalytics';
 
 export default function Respond() {
   const params = useLocalSearchParams();
@@ -34,6 +35,7 @@ export default function Respond() {
   const { submitResponse, uploading, queueLength } = useResponseUpload();
   const { isConnected } = useNetworkStatus();
   const { colors } = useTheme();
+  const { track } = useAnalytics();
 
   const [notes, setNotes] = useState('');
   const [tagInput, setTagInput] = useState('');
@@ -76,6 +78,13 @@ export default function Respond() {
     };
 
     const response = await submitResponse(input);
+
+    track('response_submitted', {
+      image_count: images.length,
+      has_notes: notes.trim().length > 0,
+      tag_count: tags.length,
+      offline: !isConnected,
+    });
 
     if (response) {
       // Successfully uploaded
