@@ -9,31 +9,32 @@
 export type CreativeTwist = {
   text: string;
   compatibleWith: 'all' | 'color' | 'dry' | 'wet' | string[];
+  excludeMediums?: string[];
 };
 
 // Mediums that support color
-export const COLOR_MEDIUMS = ['watercolor', 'gouache', 'acrylic', 'oil', 'pastel', 'digital', 'collage', 'mixed-media', 'photography'];
+export const COLOR_MEDIUMS = ['watercolor', 'gouache', 'acrylic', 'oil', 'pastel', 'digital', 'collage', 'mixed-media'];
 // Mediums that are inherently monochrome
 export const MONO_MEDIUMS = ['pencil', 'charcoal', 'ink'];
 // Wet mediums (longer setup/dry time)
 export const WET_MEDIUMS = ['watercolor', 'gouache', 'acrylic', 'oil'];
 // Dry mediums (quick to start)
-export const DRY_MEDIUMS = ['pencil', 'charcoal', 'ink', 'pastel', 'digital', 'collage', 'paper-art', 'photography'];
+export const DRY_MEDIUMS = ['pencil', 'charcoal', 'ink', 'pastel', 'digital', 'collage', 'paper-art'];
 
 export const CREATIVE_TWISTS: CreativeTwist[] = [
   // Universal twists — work with any medium
-  { text: "Work from memory, not reference", compatibleWith: 'all' },
+  { text: "Work from memory, not reference", compatibleWith: 'all', excludeMediums: ['photography'] },
   { text: "Focus on negative space", compatibleWith: 'all' },
   { text: "Emphasize light and shadow", compatibleWith: 'all' },
-  { text: "Simplify to essential shapes only", compatibleWith: 'all' },
+  { text: "Simplify to essential shapes only", compatibleWith: 'all', excludeMediums: ['photography'] },
   { text: "Try a perspective you've never used", compatibleWith: 'all' },
-  { text: "Work larger than usual", compatibleWith: 'all' },
-  { text: "Work smaller than usual", compatibleWith: 'all' },
+  { text: "Work larger than usual", compatibleWith: 'all', excludeMediums: ['photography'] },
+  { text: "Work smaller than usual", compatibleWith: 'all', excludeMediums: ['photography'] },
   { text: "Focus on movement and energy", compatibleWith: 'all' },
   { text: "Create a mood, not just a scene", compatibleWith: 'all' },
   { text: "Break one rule you usually follow", compatibleWith: 'all' },
   { text: "Spend extra time on composition before starting", compatibleWith: 'all' },
-  { text: "Leave it intentionally unfinished", compatibleWith: 'all' },
+  { text: "Leave it intentionally unfinished", compatibleWith: 'all', excludeMediums: ['photography'] },
   { text: "Work in a series — do 3 quick variations", compatibleWith: 'all' },
 
   // Color-only twists — only for mediums that support color
@@ -62,6 +63,10 @@ export const CREATIVE_TWISTS: CreativeTwist[] = [
   // Photography twists
   { text: "Shoot from an unusual angle or perspective", compatibleWith: ['photography'] },
   { text: "Use only natural light — no flash", compatibleWith: ['photography'] },
+  { text: "Get as close as you can — fill the frame", compatibleWith: ['photography'] },
+  { text: "Wait for the perfect moment before pressing the shutter", compatibleWith: ['photography'] },
+  { text: "Shoot in black and white", compatibleWith: ['photography'] },
+  { text: "Tell a story in a single frame", compatibleWith: ['photography'] },
 ];
 
 /**
@@ -69,6 +74,7 @@ export const CREATIVE_TWISTS: CreativeTwist[] = [
  */
 export function getTwistsForMedium(medium: string): CreativeTwist[] {
   return CREATIVE_TWISTS.filter(twist => {
+    if (twist.excludeMediums?.includes(medium)) return false;
     if (twist.compatibleWith === 'all') return true;
     if (twist.compatibleWith === 'color') return COLOR_MEDIUMS.includes(medium);
     if (twist.compatibleWith === 'dry') return DRY_MEDIUMS.includes(medium);

@@ -68,6 +68,7 @@ const TEMPLATES: PromptTemplate[] = [
   // Photography guided
   { template: "Photograph {subject} — try framing it from three different angles and pick your favorite", tier: 'guided', mediums: ['photography'] },
   { template: "Capture {subject} with your camera — pay attention to where the light is coming from", tier: 'guided', mediums: ['photography'] },
+  { template: "Photograph {subject} — try getting closer than you think you should, then take a step back and compare", tier: 'guided', mediums: ['photography'] },
 
   // Universal guided
   { template: "Create {subject} with {medium} today — close your eyes and picture it for a moment before you begin", tier: 'guided' },
@@ -117,6 +118,8 @@ const TEMPLATES: PromptTemplate[] = [
   // Photography
   { template: "Photograph {subject}, focusing on composition and the interplay of light and shadow", tier: 'standard', mediums: ['photography'] },
   { template: "Shoot {subject} with intention — find the angle that tells the most compelling story", tier: 'standard', mediums: ['photography'] },
+  { template: "Capture {subject} — experiment with depth of field to draw the viewer's eye", tier: 'standard', mediums: ['photography'] },
+  { template: "Photograph {subject} at an unexpected time of day — how does the light change the mood?", tier: 'standard', mediums: ['photography'] },
 
   // Universal standard
   { template: "Create {subject} with {medium} — focus on what catches your eye first", tier: 'standard' },
@@ -137,6 +140,8 @@ const TEMPLATES: PromptTemplate[] = [
 
   // Medium-specific open
   { template: "{subject} — one frame, no editing. Capture it in-camera", tier: 'open', mediums: ['photography'] },
+  { template: "Photograph {subject} — find the light that makes it extraordinary", tier: 'open', mediums: ['photography'] },
+  { template: "{subject}. One lens. Tell the whole story in a single shot", tier: 'open', mediums: ['photography'] },
   { template: "{subject} — push your {medium} between very wet and very dry", tier: 'open', mediums: ['watercolor', 'ink'] },
   { template: "{subject} with {medium} — contrast thick, heavy strokes with thin, delicate ones", tier: 'open', mediums: ['oil', 'acrylic'] },
   { template: "{subject} with {medium}. One continuous line, no lifting", tier: 'open', mediums: ['pencil', 'ink', 'charcoal'] },
