@@ -32,6 +32,37 @@ function randomItem<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
 
+// Session-level rotation tracking — prevents repeats across rapid "New" taps
+// without needing to wait for DB writes to propagate
+let sessionUsedSubjects: string[] = [];
+let sessionUsedMediums: string[] = [];
+let sessionDate: string | null = null;
+
+function resetSessionIfNeeded() {
+  const today = new Date().toISOString().split('T')[0];
+  if (sessionDate !== today) {
+    sessionUsedSubjects = [];
+    sessionUsedMediums = [];
+    sessionDate = today;
+  }
+}
+
+/**
+ * Pick an item from the array, preferring ones not recently used in this session.
+ * Falls back to least-recently-used if all have been used.
+ */
+function pickWithRotation<T extends string>(options: T[], recentlyUsed: T[]): T {
+  // Filter to items not used this session
+  const fresh = options.filter(o => !recentlyUsed.includes(o));
+  if (fresh.length > 0) {
+    return fresh[Math.floor(Math.random() * fresh.length)];
+  }
+  // All used — pick the one used longest ago (first in the recently-used list)
+  // by filtering to the earliest-used items
+  const leastRecent = options.filter(o => recentlyUsed.indexOf(o) <= recentlyUsed.indexOf(recentlyUsed[0]));
+  return leastRecent[Math.floor(Math.random() * leastRecent.length)] || randomItem(options);
+}
+
 /**
  * Explorer-level tips appended to prompts for beginners
  */
@@ -57,7 +88,7 @@ async function getEligibleSubjects(
   userId: string,
   userSubjects: string[],
   exclusions: string[],
-  repeatWindowDays: number = 14
+  repeatWindowDays: number = 30
 ): Promise<string[]> {
   // Calculate cutoff date for recent subjects
   const cutoffDate = new Date();
@@ -144,17 +175,21 @@ async function generatePrompt(
   twist: string | null;
   prompt_text: string;
 }> {
-  // Pick random medium
-  const medium = randomItem(preferences.art_mediums);
+  resetSessionIfNeeded();
 
-  // Get eligible subjects and pick one
+  // Pick medium with session-level rotation (avoid repeating the same medium back-to-back)
+  const medium = pickWithRotation(preferences.art_mediums, sessionUsedMediums);
+  sessionUsedMediums.push(medium);
+
+  // Get eligible subjects (30-day DB window) and pick one with session rotation
   const eligibleSubjects = await getEligibleSubjects(
     userId,
     preferences.subjects,
     preferences.exclusions || [],
-    14
+    30
   );
-  const subject = randomItem(eligibleSubjects);
+  const subject = pickWithRotation(eligibleSubjects, sessionUsedSubjects);
+  sessionUsedSubjects.push(subject);
 
   // Get difficulty settings
   const difficulty = getDifficultyOption(preferences.difficulty || 'developing');
