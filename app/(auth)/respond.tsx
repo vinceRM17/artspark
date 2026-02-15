@@ -15,6 +15,8 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  ActionSheetIOS,
+  Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useImagePicker } from '@/lib/hooks/useImagePicker';
@@ -42,6 +44,25 @@ export default function Respond() {
   const [tags, setTags] = useState<string[]>([]);
   const [shareVisible, setShareVisible] = useState(false);
   const [shareImageUri, setShareImageUri] = useState('');
+  const [showAndroidSheet, setShowAndroidSheet] = useState(false);
+
+  // Unified photo picker via native action sheet
+  const handleAddPhoto = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Take Photo', 'Choose from Library', 'Cancel'],
+          cancelButtonIndex: 2,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 0) pickFromCamera();
+          else if (buttonIndex === 1) pickFromLibrary();
+        }
+      );
+    } else {
+      setShowAndroidSheet(true);
+    }
+  };
 
   // Parse tags from comma-separated input
   const handleTagInputChange = (text: string) => {
@@ -197,29 +218,17 @@ export default function Respond() {
               </View>
             )}
 
-            {/* Image picker buttons */}
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <TouchableOpacity
-                onPress={pickFromLibrary}
-                style={{ flex: 1, backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 12 }}
-                accessibilityRole="button"
-                accessibilityLabel="Choose photo from library"
-              >
-                <Text style={{ color: colors.primary, textAlign: 'center', fontWeight: '600' }}>
-                  Choose from Library
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={pickFromCamera}
-                style={{ flex: 1, backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 12 }}
-                accessibilityRole="button"
-                accessibilityLabel="Take photo with camera"
-              >
-                <Text style={{ color: colors.primary, textAlign: 'center', fontWeight: '600' }}>
-                  Take Photo
-                </Text>
-              </TouchableOpacity>
-            </View>
+            {/* Add Photo button */}
+            <TouchableOpacity
+              onPress={handleAddPhoto}
+              style={{ backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 12 }}
+              accessibilityRole="button"
+              accessibilityLabel="Add photo"
+            >
+              <Text style={{ color: colors.primary, textAlign: 'center', fontWeight: '600' }}>
+                Add Photo
+              </Text>
+            </TouchableOpacity>
 
             <Text style={{ color: colors.textSecondary, fontSize: 12, textAlign: 'center', marginTop: 8 }}>
               {images.length}/3 photos
@@ -329,6 +338,39 @@ export default function Respond() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Android photo picker bottom sheet */}
+      {Platform.OS === 'android' && showAndroidSheet && (
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setShowAndroidSheet(false)}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
+        >
+          <View style={{ backgroundColor: colors.surface, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, paddingBottom: 32 }}>
+            <TouchableOpacity
+              onPress={() => { setShowAndroidSheet(false); pickFromCamera(); }}
+              style={{ paddingVertical: 16 }}
+              accessibilityRole="button"
+            >
+              <Text style={{ fontSize: 16, color: colors.text, textAlign: 'center' }}>Take Photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => { setShowAndroidSheet(false); pickFromLibrary(); }}
+              style={{ paddingVertical: 16 }}
+              accessibilityRole="button"
+            >
+              <Text style={{ fontSize: 16, color: colors.text, textAlign: 'center' }}>Choose from Library</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowAndroidSheet(false)}
+              style={{ paddingVertical: 16 }}
+              accessibilityRole="button"
+            >
+              <Text style={{ fontSize: 16, color: colors.textSecondary, textAlign: 'center' }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      )}
 
       {/* Share Card Modal */}
       <ShareModal

@@ -425,21 +425,24 @@ export async function fetchReferenceImages(
     }
   }
 
-  // Try Pexels (best relevance for normal subjects)
-  try {
-    const results = await fetchFromPexels(subject, medium, count, promptText);
-    if (results.length > 0) return results;
-  } catch {
-    // Fall through
+  // Fetch Pexels and Unsplash in parallel, use first success
+  const stockPromises: Promise<{ source: string; results: ReferenceImage[] }>[] = [
+    fetchFromPexels(subject, medium, count, promptText)
+      .then(results => ({ source: 'pexels', results }))
+      .catch(() => ({ source: 'pexels', results: [] as ReferenceImage[] })),
+  ];
+  if (UNSPLASH_ACCESS_KEY) {
+    stockPromises.push(
+      fetchFromUnsplash(subject, medium, count, promptText)
+        .then(results => ({ source: 'unsplash', results }))
+        .catch(() => ({ source: 'unsplash', results: [] as ReferenceImage[] })),
+    );
   }
 
-  // Try Unsplash second
-  if (UNSPLASH_ACCESS_KEY) {
-    try {
-      const results = await fetchFromUnsplash(subject, medium, count, promptText);
-      if (results.length > 0) return results;
-    } catch {
-      // Fall through
+  const settled = await Promise.allSettled(stockPromises);
+  for (const result of settled) {
+    if (result.status === 'fulfilled' && result.value.results.length > 0) {
+      return result.value.results;
     }
   }
 

@@ -136,35 +136,32 @@ export async function getResponsesForPromptWithImages(
 
   const responses = (data as Response[]) || [];
 
-  // Generate signed URLs for all images
-  const responsesWithSignedUrls = await Promise.all(
-    responses.map(async (response) => {
-      const signedUrls = await Promise.all(
-        response.image_urls.map(async (url) => {
-          try {
-            const { data: signedData, error: signError } = await supabase.storage
-              .from('responses')
-              .createSignedUrl(url, 3600); // 1 hour expiry
+  // Batch sign all image URLs in a single API call
+  const allPaths = responses.flatMap(r => r.image_urls);
+  let signedUrlMap = new Map<string, string>();
 
-            if (signError) {
-              console.error('Error generating signed URL:', signError);
-              return url; // Return original URL if signing fails
-            }
+  if (allPaths.length > 0) {
+    try {
+      const { data: signedUrls, error: signError } = await supabase.storage
+        .from('responses')
+        .createSignedUrls(allPaths, 3600);
 
-            return signedData.signedUrl;
-          } catch (err) {
-            console.error('Error in createSignedUrl:', err);
-            return url; // Return original URL if signing fails
+      if (!signError && signedUrls) {
+        for (const entry of signedUrls) {
+          if (entry.signedUrl && entry.path) {
+            signedUrlMap.set(entry.path, entry.signedUrl);
           }
-        })
-      );
+        }
+      }
+    } catch {
+      // Fall back to original URLs if batch signing fails
+    }
+  }
 
-      return {
-        ...response,
-        image_urls: signedUrls,
-      };
-    })
-  );
+  const responsesWithSignedUrls = responses.map(response => ({
+    ...response,
+    image_urls: response.image_urls.map(url => signedUrlMap.get(url) || url),
+  }));
 
   return responsesWithSignedUrls;
 }

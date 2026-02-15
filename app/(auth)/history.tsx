@@ -5,8 +5,8 @@
  * infinite scroll pagination, and pull-to-refresh.
  */
 
-import React, { useCallback, memo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useCallback, useMemo, memo } from 'react';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { usePromptHistory } from '@/lib/hooks/usePromptHistory';
 import { PromptWithStatus } from '@/lib/schemas/prompts';
@@ -64,6 +64,23 @@ PromptListItem.displayName = 'PromptListItem';
 export default function HistoryScreen() {
   const { prompts, loading, error, hasMore, loadMore, refresh } = usePromptHistory();
   const [refreshing, setRefreshing] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [debouncedQuery, setDebouncedQuery] = React.useState('');
+
+  // Debounce search input
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleSearchChange = useCallback((text: string) => {
+    setSearchQuery(text);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setDebouncedQuery(text), 300);
+  }, []);
+
+  // Filter prompts by search query
+  const filteredPrompts = useMemo(() => {
+    if (!debouncedQuery.trim()) return prompts;
+    const lower = debouncedQuery.toLowerCase();
+    return prompts.filter(p => p.prompt_text.toLowerCase().includes(lower));
+  }, [prompts, debouncedQuery]);
 
   // Handle press navigation
   const handlePress = useCallback((id: string) => {
@@ -137,7 +154,7 @@ export default function HistoryScreen() {
   // Success state - FlatList with prompts
   return (
     <FlatList
-      data={prompts}
+      data={filteredPrompts}
       renderItem={renderItem}
       keyExtractor={(item) => item.id}
       initialNumToRender={15}
@@ -155,12 +172,32 @@ export default function HistoryScreen() {
       ListHeaderComponent={
         <View className="py-4">
           <Text className="text-2xl font-bold text-gray-900 px-6">Your History</Text>
+          <View className="px-6 mt-3">
+            <TextInput
+              value={searchQuery}
+              onChangeText={handleSearchChange}
+              placeholder="Search prompts..."
+              placeholderTextColor="#9CA3AF"
+              className="bg-white rounded-xl px-4 py-3 text-base text-gray-900"
+              style={{ borderWidth: 1, borderColor: '#E5E7EB' }}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+              autoCorrect={false}
+            />
+          </View>
         </View>
       }
       ListFooterComponent={
         loading && prompts.length > 0 ? (
           <View className="py-4">
             <ActivityIndicator color="#7C9A72" />
+          </View>
+        ) : null
+      }
+      ListEmptyComponent={
+        debouncedQuery.trim() ? (
+          <View className="py-8 items-center">
+            <Text className="text-gray-500 text-center">No prompts matching "{debouncedQuery}"</Text>
           </View>
         ) : null
       }

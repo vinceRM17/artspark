@@ -56,38 +56,54 @@ export async function getGalleryItems(
     throw new Error(`Failed to fetch gallery: ${error.message}`);
   }
 
-  // Flatten: each image_url becomes its own gallery item
-  const items: GalleryItem[] = [];
+  // Collect all image paths for batch signing
+  const allImagePaths: string[] = [];
+  const rowMeta: { row: any; prompt: any; urlIndex: number }[] = [];
+
   for (const row of data || []) {
     const prompt = (row as any).prompts;
     const imageUrls: string[] = (row as any).image_urls || [];
-
-    for (const url of imageUrls) {
-      // Generate signed URL
-      let signedUrl = url;
-      try {
-        const { data: signedData } = await supabase.storage
-          .from('responses')
-          .createSignedUrl(url, 3600);
-        if (signedData?.signedUrl) {
-          signedUrl = signedData.signedUrl;
-        }
-      } catch {
-        // Use original URL if signing fails
-      }
-
-      items.push({
-        id: `${row.id}-${imageUrls.indexOf(url)}`,
-        image_url: signedUrl,
-        medium: prompt?.medium || '',
-        subject: prompt?.subject || '',
-        notes: row.notes,
-        tags: row.tags || [],
-        prompt_text: prompt?.prompt_text || '',
-        prompt_id: row.prompt_id,
-        created_at: row.created_at,
-      });
+    for (let i = 0; i < imageUrls.length; i++) {
+      allImagePaths.push(imageUrls[i]);
+      rowMeta.push({ row, prompt, urlIndex: i });
     }
+  }
+
+  // Batch sign all URLs in a single API call
+  let signedUrlMap = new Map<string, string>();
+  if (allImagePaths.length > 0) {
+    try {
+      const { data: signedUrls } = await supabase.storage
+        .from('responses')
+        .createSignedUrls(allImagePaths, 3600);
+      if (signedUrls) {
+        for (const entry of signedUrls) {
+          if (entry.signedUrl && entry.path) {
+            signedUrlMap.set(entry.path, entry.signedUrl);
+          }
+        }
+      }
+    } catch {
+      // Fall back to original URLs if batch signing fails
+    }
+  }
+
+  // Build gallery items using signed URLs
+  const items: GalleryItem[] = [];
+  for (let i = 0; i < allImagePaths.length; i++) {
+    const { row, prompt, urlIndex } = rowMeta[i];
+    const originalUrl = allImagePaths[i];
+    items.push({
+      id: `${row.id}-${urlIndex}`,
+      image_url: signedUrlMap.get(originalUrl) || originalUrl,
+      medium: prompt?.medium || '',
+      subject: prompt?.subject || '',
+      notes: row.notes,
+      tags: row.tags || [],
+      prompt_text: prompt?.prompt_text || '',
+      prompt_id: row.prompt_id,
+      created_at: row.created_at,
+    });
   }
 
   return {

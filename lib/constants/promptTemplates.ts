@@ -32,15 +32,32 @@ const TEMPLATES: PromptTemplate[] = [
   { template: "Draw {subject} using {medium} — what colors will you choose?", tier: 'kids', mediums: ['pencil', 'charcoal', 'ink', 'pastel'] },
 
   // Painting mediums
-  { template: "Paint {subject} using {medium} — make it as colorful as you want!", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
-  { template: "Can you paint {subject} with {medium}? Add your own fun details!", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
-  { template: "Grab your {medium} and paint {subject} — be as creative as you like!", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
-  { template: "Time to get creative! Paint {subject} with {medium} and add a fun background", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
-  { template: "Paint {subject} using {medium} — what colors will you choose?", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
+  { template: "Paint {subject} using {medium} — make it as colorful as you want!", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic'] },
+  { template: "Can you paint {subject} with {medium}? Add your own fun details!", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic'] },
+  { template: "Grab your {medium} and paint {subject} — be as creative as you like!", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic'] },
+  { template: "Time to get creative! Paint {subject} with {medium} and add a fun background", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic'] },
+  { template: "Paint {subject} using {medium} — what colors will you choose?", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic'] },
 
-  // Photography
-  { template: "Photograph {subject} — try to capture it in a fun and surprising way!", tier: 'kids', mediums: ['photography'] },
-  { template: "Grab your camera and shoot {subject} — what makes it interesting to you?", tier: 'kids', mediums: ['photography'] },
+  // Photography (technique-focused)
+  { template: "Find {subject} and photograph it from the most interesting angle you can think of!", tier: 'kids', mediums: ['photography'] },
+  { template: "Grab your camera and take 3 different photos of {subject} — which one do you like best?", tier: 'kids', mediums: ['photography'] },
+  { template: "Can you find {subject}? Get as close as you can and snap a photo!", tier: 'kids', mediums: ['photography'] },
+
+  // Pastel kids
+  { template: "Use your pastels to color {subject} — blend the colors with your fingers!", tier: 'kids', mediums: ['pastel'] },
+
+  // Gouache kids
+  { template: "Paint {subject} with gouache — you can paint light colors over dark ones!", tier: 'kids', mediums: ['gouache'] },
+
+  // Collage kids
+  { template: "Cut and paste {subject} from magazines and paper — the messier the better!", tier: 'kids', mediums: ['collage'] },
+
+  // Paper Art kids
+  { template: "Fold and cut paper to make {subject} — see what shapes you can create!", tier: 'kids', mediums: ['paper-art'] },
+
+  // Digital kids
+  { template: "Draw {subject} on your tablet — try using different brushes and colors!", tier: 'kids', mediums: ['digital'] },
+  { template: "Use your drawing app to create {subject} — undo is your best friend!", tier: 'kids', mediums: ['digital'] },
 
   // Universal (verb-neutral — works for any medium)
   { template: "Use {medium} to create {subject} — there's no wrong way to do it!", tier: 'kids' },
@@ -53,22 +70,34 @@ const TEMPLATES: PromptTemplate[] = [
 
   // Watercolor guided
   { template: "Sketch {subject} lightly in pencil first, then paint over it with {medium} — start with the lightest colors and build up", tier: 'guided', mediums: ['watercolor'] },
-  { template: "Paint {subject} with {medium} — try wetting the paper first for soft, dreamy edges", tier: 'guided', mediums: ['watercolor', 'gouache'] },
+  { template: "Paint {subject} with {medium} — try wetting the paper first for soft, dreamy edges", tier: 'guided', mediums: ['watercolor'] },
 
   // Drawing guided
   { template: "Draw {subject} with {medium} — start with simple shapes like circles and ovals, then add details on top", tier: 'guided', mediums: ['pencil', 'charcoal'] },
   { template: "Try drawing {subject} with {medium}: do a quick 30-second version first, then a slower, more careful one", tier: 'guided', mediums: ['pencil', 'charcoal', 'ink'] },
 
   // Painting guided
-  { template: "Paint {subject} with {medium} using big brushstrokes first — fill the whole canvas with color before adding any details", tier: 'guided', mediums: ['acrylic', 'oil', 'gouache'] },
+  { template: "Paint {subject} with {medium} using big brushstrokes first — fill the whole canvas with color before adding any details", tier: 'guided', mediums: ['acrylic', 'oil'] },
 
   // Digital guided
   { template: "Create {subject} digitally — start with a rough sketch on one layer, then add color on a layer underneath", tier: 'guided', mediums: ['digital'] },
 
-  // Photography guided
-  { template: "Photograph {subject} — try framing it from three different angles and pick your favorite", tier: 'guided', mediums: ['photography'] },
-  { template: "Capture {subject} with your camera — pay attention to where the light is coming from", tier: 'guided', mediums: ['photography'] },
-  { template: "Photograph {subject} — try getting closer than you think you should, then take a step back and compare", tier: 'guided', mediums: ['photography'] },
+  // Photography guided (technique-focused)
+  { template: "Photograph {subject} — try shooting from above, from below, and at eye level, then pick your favorite", tier: 'guided', mediums: ['photography'] },
+  { template: "Find {subject} and capture it — pay attention to where the light is coming from and position yourself so it looks best", tier: 'guided', mediums: ['photography'] },
+  { template: "Photograph {subject} — try filling the entire frame so there's no empty space", tier: 'guided', mediums: ['photography'] },
+
+  // Pastel guided
+  { template: "Draw {subject} with pastel — start with light colors and layer darker ones on top", tier: 'guided', mediums: ['pastel'] },
+
+  // Gouache guided
+  { template: "Paint {subject} with gouache — mix colors thickly for bold, flat areas", tier: 'guided', mediums: ['gouache'] },
+
+  // Collage guided
+  { template: "Create {subject} as a collage — tear paper instead of cutting for softer edges", tier: 'guided', mediums: ['collage'] },
+
+  // Paper Art guided
+  { template: "Build {subject} from paper — try folding, cutting, and layering to add depth", tier: 'guided', mediums: ['paper-art'] },
 
   // Universal guided
   { template: "Create {subject} with {medium} today — close your eyes and picture it for a moment before you begin", tier: 'guided' },
@@ -84,7 +113,7 @@ const TEMPLATES: PromptTemplate[] = [
 
   // Watercolor
   { template: "Paint {subject} with {medium}, letting the water move the paint in unexpected ways", tier: 'standard', mediums: ['watercolor'] },
-  { template: "Create {subject} with {medium} — keep it loose and focus on the feeling, not the details", tier: 'standard', mediums: ['watercolor', 'gouache'] },
+  { template: "Create {subject} with {medium} — keep it loose and focus on the feeling, not the details", tier: 'standard', mediums: ['watercolor'] },
   { template: "Paint {subject} with {medium}, building up from light colors to dark", tier: 'standard', mediums: ['watercolor'] },
 
   // Pencil / Charcoal / Ink
@@ -96,7 +125,7 @@ const TEMPLATES: PromptTemplate[] = [
   // Oil / Acrylic
   { template: "Paint {subject} with {medium}, using bold and confident brushstrokes", tier: 'standard', mediums: ['oil', 'acrylic'] },
   { template: "Create {subject} with {medium} — experiment with thick and thin layers of paint", tier: 'standard', mediums: ['oil', 'acrylic'] },
-  { template: "Paint {subject} with {medium} — start with big areas of color, then add detail where it matters most", tier: 'standard', mediums: ['oil', 'acrylic', 'gouache'] },
+  { template: "Paint {subject} with {medium} — start with big areas of color, then add detail where it matters most", tier: 'standard', mediums: ['oil', 'acrylic'] },
 
   // Digital
   { template: "Create {subject} digitally — focus on the overall shape and silhouette first", tier: 'standard', mediums: ['digital'] },
@@ -106,6 +135,23 @@ const TEMPLATES: PromptTemplate[] = [
   { template: "Create {subject} with {medium}, combining different textures and materials", tier: 'standard', mediums: ['collage', 'mixed-media', 'paper-art'] },
   { template: "Build {subject} with {medium} — let unexpected combinations surprise you", tier: 'standard', mediums: ['collage', 'mixed-media'] },
 
+  // Pastel standard
+  { template: "Create {subject} in pastel, building rich color through layered strokes", tier: 'standard', mediums: ['pastel'] },
+  { template: "Capture {subject} in pastel — use the side of the stick for broad, soft areas", tier: 'standard', mediums: ['pastel'] },
+
+  // Gouache standard
+  { template: "Create {subject} in gouache, using its opacity to build layers confidently", tier: 'standard', mediums: ['gouache'] },
+  { template: "Create {subject} with {medium} — keep it loose and focus on the feeling, not the details", tier: 'standard', mediums: ['gouache'] },
+
+  // Paper Art standard
+  { template: "Construct {subject} in paper — think about how light and shadow play across the folds", tier: 'standard', mediums: ['paper-art'] },
+
+  // Photography standard (technique-focused)
+  { template: "Find {subject} and photograph it — use the background to add depth or contrast", tier: 'standard', mediums: ['photography'] },
+  { template: "Photograph {subject}, paying attention to leading lines that draw the viewer's eye", tier: 'standard', mediums: ['photography'] },
+  { template: "Capture {subject} — wait for the right light, even if it takes a few minutes", tier: 'standard', mediums: ['photography'] },
+  { template: "Photograph {subject} using the rule of thirds — place the subject off-center", tier: 'standard', mediums: ['photography'] },
+
   // Subject-specific
   { template: "Create {subject} with {medium} — notice how the light falls and let that guide you", tier: 'standard', subjects: ['animals', 'people-portraits', 'still-life', 'botanicals', 'food'] },
   { template: "Create {subject} with {medium} — try to capture the mood and atmosphere", tier: 'standard', subjects: ['landscapes', 'urban', 'architecture'] },
@@ -114,12 +160,6 @@ const TEMPLATES: PromptTemplate[] = [
   { template: "Create {subject} with {medium} — focus on the textures and surfaces you see", tier: 'standard', subjects: ['still-life', 'food', 'botanicals'] },
   { template: "Capture {subject} with {medium} — what makes this moment special?", tier: 'standard', subjects: ['animals', 'people-portraits'] },
   { template: "Create {subject} with {medium} — play with what's close up and what's far away", tier: 'standard', subjects: ['landscapes', 'urban', 'architecture', 'botanicals'] },
-
-  // Photography
-  { template: "Photograph {subject}, focusing on composition and the interplay of light and shadow", tier: 'standard', mediums: ['photography'] },
-  { template: "Shoot {subject} with intention — find the angle that tells the most compelling story", tier: 'standard', mediums: ['photography'] },
-  { template: "Capture {subject} — experiment with depth of field to draw the viewer's eye", tier: 'standard', mediums: ['photography'] },
-  { template: "Photograph {subject} at an unexpected time of day — how does the light change the mood?", tier: 'standard', mediums: ['photography'] },
 
   // Universal standard
   { template: "Create {subject} with {medium} — focus on what catches your eye first", tier: 'standard' },
@@ -139,14 +179,59 @@ const TEMPLATES: PromptTemplate[] = [
   { template: "Distill {subject} to its essence using {medium}", tier: 'open' },
 
   // Medium-specific open
-  { template: "{subject} — one frame, no editing. Capture it in-camera", tier: 'open', mediums: ['photography'] },
+  { template: "{subject}. One shot, no editing. Make it count", tier: 'open', mediums: ['photography'] },
   { template: "Photograph {subject} — find the light that makes it extraordinary", tier: 'open', mediums: ['photography'] },
-  { template: "{subject}. One lens. Tell the whole story in a single shot", tier: 'open', mediums: ['photography'] },
+  { template: "{subject} — tell a complete story in a single frame", tier: 'open', mediums: ['photography'] },
   { template: "{subject} — push your {medium} between very wet and very dry", tier: 'open', mediums: ['watercolor', 'ink'] },
   { template: "{subject} with {medium} — contrast thick, heavy strokes with thin, delicate ones", tier: 'open', mediums: ['oil', 'acrylic'] },
   { template: "{subject} with {medium}. One continuous line, no lifting", tier: 'open', mediums: ['pencil', 'ink', 'charcoal'] },
   { template: "Layer, cover, and reveal: {subject} with {medium}", tier: 'open', mediums: ['collage', 'mixed-media'] },
+
+  // Pastel open
+  { template: "{subject} in pastel — let the tooth of the paper do the work", tier: 'open', mediums: ['pastel'] },
+
+  // Gouache open
+  { template: "{subject} with gouache — push between transparent washes and opaque coverage", tier: 'open', mediums: ['gouache'] },
+
+  // Collage open
+  { template: "Deconstruct and reassemble: {subject} through collage", tier: 'open', mediums: ['collage'] },
+
+  // Paper Art open
+  { template: "{subject} — one sheet of paper, no glue. Only folds and cuts", tier: 'open', mediums: ['paper-art'] },
+
+  // Digital open
+  { template: "{subject} digitally — limit yourself to a single layer", tier: 'open', mediums: ['digital'] },
+  { template: "{subject} — pixel art only, 64x64 canvas", tier: 'open', mediums: ['digital'] },
 ];
+
+// Photography-specific subject overrides: everyday, accessible subjects
+// that replace the artistic/abstract variations when medium is photography
+const photographySubjectOverrides: Record<string, string[]> = {
+  'animals': ['your pet', 'a bird outside your window', 'a dog on a walk', 'ants on the sidewalk', 'a squirrel in a tree'],
+  'landscapes': ['the view from your front door', 'your street at golden hour', 'a puddle reflecting the sky', 'clouds from your window', 'the nearest tree'],
+  'people-portraits': ['your own hands', 'a friend or family member', 'your reflection', 'a stranger on the street (candid)', 'someone at work'],
+  'still-life': ['your morning coffee', 'your keys on the table', 'whatever is on your desk right now', 'your shoes by the door', 'fruit in your kitchen'],
+  'abstract': ['shadows on the wall', 'light through a window', 'a reflection in glass', 'peeling paint or rust', 'water droplets on a surface'],
+  'urban': ['a fire hydrant', 'a crosswalk', 'a storefront sign', 'a parked bicycle', 'power lines against the sky'],
+  'botanicals': ['a houseplant', 'weeds growing through a crack', 'a flower in your yard', 'leaves on the ground', 'moss on a wall'],
+  'food': ['your lunch', 'fruit on the counter', 'a cup of coffee or tea', 'groceries before you put them away', 'crumbs on a plate'],
+  'architecture': ['a doorknob', 'stairs', 'your ceiling', 'a window frame', 'a fence or railing'],
+  'patterns': ['floor tiles', 'the grain in wood', 'bricks in a wall', 'fabric texture', 'the screen of your phone up close'],
+  'mythology': ['a statue or sculpture near you', 'a mural or street art', 'an old book cover', 'a piece of jewelry', 'a candle flame'],
+  'fantasy': ['morning fog', 'light leaking through curtains', 'a mirror reflection', 'an overgrown corner', 'a cobweb'],
+};
+
+// Session-level template deduplication
+let recentTemplateIndices = new Set<number>();
+let recentTemplateDate: string | null = null;
+
+function resetTemplateDedupIfNeeded() {
+  const today = new Date().toISOString().split('T')[0];
+  if (recentTemplateDate !== today) {
+    recentTemplateIndices = new Set();
+    recentTemplateDate = today;
+  }
+}
 
 /**
  * Get a random prompt template compatible with medium, subject, and skill tier
@@ -165,7 +250,7 @@ export function getPromptTemplate(
   });
 
   // Fallback: if tier filtering yields nothing, broaden to standard templates
-  const pool = compatible.length > 0
+  let pool = compatible.length > 0
     ? compatible
     : TEMPLATES.filter(t => {
         const mediumOk = !t.mediums || t.mediums.includes(medium);
@@ -173,8 +258,16 @@ export function getPromptTemplate(
         return mediumOk && subjectOk;
       });
 
+  // Session-level deduplication: filter out recently used templates
+  resetTemplateDedupIfNeeded();
+  const poolWithIndices = pool.map(t => ({ template: t, index: TEMPLATES.indexOf(t) }));
+  const fresh = poolWithIndices.filter(({ index }) => !recentTemplateIndices.has(index));
+  const chosen = fresh.length > 0 ? fresh : poolWithIndices; // Reset if all exhausted
+
   // Pick random template
-  const template = pool[Math.floor(Math.random() * pool.length)];
+  const pick = chosen[Math.floor(Math.random() * chosen.length)];
+  recentTemplateIndices.add(pick.index);
+  const template = pick.template;
 
   // Look up display labels
   const mediumLabels: Record<string, string> = {
@@ -332,8 +425,12 @@ export function getPromptTemplate(
     ],
   };
 
-  const mediumLabel = mediumLabels[medium] || medium;
-  const variations = subjectVariations[subject];
+  const mediumLabel = mediumLabels[medium] || medium.replace(/^custom:/, '');
+
+  // Use photography-specific subject overrides when medium is photography
+  const variations = medium === 'photography' && photographySubjectOverrides[subject]
+    ? photographySubjectOverrides[subject]
+    : subjectVariations[subject];
   const subjectLabel = variations
     ? variations[Math.floor(Math.random() * variations.length)]
     : subject;
@@ -342,8 +439,8 @@ export function getPromptTemplate(
     .replace('{medium}', mediumLabel)
     .replace('{subject}', subjectLabel);
 
-  // Fix a/an: "a ink" → "an ink", "a oil paint" → "an oil paint"
-  // Only match "a" followed by a vowel-starting word of 2+ chars (avoids "a a" → "an a")
+  // Fix a/an: "a ink" -> "an ink", "a oil paint" -> "an oil paint"
+  // Only match "a" followed by a vowel-starting word of 2+ chars (avoids "a a" -> "an a")
   text = text.replace(/\b(a) ([aeiou]\w)/gi, (_match, article, rest) => {
     const an = article[0] === 'A' ? 'An' : 'an';
     return `${an} ${rest}`;
