@@ -36,7 +36,7 @@ export const TIER_INFO: Record<UserTier, { label: string; price: string; descrip
   free: {
     label: 'Free',
     price: 'Free',
-    description: '1 prompt per day, no portfolio saving',
+    description: '1 prompt per day, no gallery saving',
   },
   basic: {
     label: 'ArtSpark Basic',
@@ -46,6 +46,6 @@ export const TIER_INFO: Record<UserTier, { label: string; price: string; descrip
   community: {
     label: 'ArtSpark Community',
     price: '~$50/yr',
-    description: 'Unlimited prompts, portfolio, community features, and more',
+    description: 'Unlimited prompts, gallery, community features, and more',
   },
 };

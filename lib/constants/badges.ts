@@ -44,7 +44,7 @@ export const BADGES: BadgeDefinition[] = [
   },
   {
     id: 'portfolio-builder',
-    name: 'Portfolio Builder',
+    name: 'Gallery Builder',
     description: 'Create 25 artworks',
     icon: '\uD83D\uDDBC\uFE0F',
     category: 'milestone',

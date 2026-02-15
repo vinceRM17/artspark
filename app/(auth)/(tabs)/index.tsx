@@ -424,15 +424,15 @@ export default function Home() {
                     }}
                     activeOpacity={0.85}
                     accessibilityRole="button"
-                    accessibilityLabel="Add to my portfolio"
+                    accessibilityLabel="Add to My Gallery"
                     accessibilityHint="Opens the camera to create art for this prompt"
                   >
                     <Text style={{ color: '#FFF', textAlign: 'center', fontSize: 17, fontWeight: '700', letterSpacing: 0.3 }}>
-                      Add to My Portfolio
+                      Add to My Gallery
                     </Text>
                   </TouchableOpacity>
                 ) : (
-                  <UpgradePrompt context="portfolio" />
+                  <UpgradePrompt context="gallery" />
                 )}
 
                 {/* Feedback row */}

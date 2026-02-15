@@ -1,13 +1,13 @@
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 
 type UpgradePromptProps = {
-  context?: 'portfolio' | 'prompts' | 'general';
+  context?: 'gallery' | 'prompts' | 'general';
 };
 
 const MESSAGES: Record<string, { title: string; subtitle: string }> = {
-  portfolio: {
+  gallery: {
     title: 'Save your artwork',
-    subtitle: 'Upgrade to build your portfolio and track your artistic journey.',
+    subtitle: 'Upgrade to build your gallery and track your artistic journey.',
   },
   prompts: {
     title: 'Unlock more prompts',

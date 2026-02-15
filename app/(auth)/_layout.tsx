@@ -81,7 +81,7 @@ export default function AuthLayout() {
       <Stack.Screen
         name="respond"
         options={{
-          title: 'My Portfolio',
+          title: 'My Gallery',
           headerShown: true,
           headerBackTitle: 'Home',
         }}
