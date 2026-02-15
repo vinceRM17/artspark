@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getTodayPrompt, createManualPrompt } from '@/lib/services/prompts';
 import { Prompt } from '@/lib/schemas/prompts';
@@ -267,12 +268,13 @@ export function useDailyPrompt(): {
     h.promptTexts = [p.prompt_text, ...h.promptTexts].slice(0, 6);
   }
 
-  // Load dev preferences on mount
+  // Load dev/demo preferences on mount
+  const isDemo = __DEV__ || Platform.OS === 'web';
   useEffect(() => {
-    if (!userId && __DEV__) {
+    if (!userId && isDemo) {
       loadDevPreferences().then(setDevPrefs);
     }
-  }, [userId]);
+  }, [userId, isDemo]);
 
   // Fetch daily prompt on mount
   useEffect(() => {
@@ -288,8 +290,8 @@ export function useDailyPrompt(): {
         return;
       }
 
-      // Dev mode fallback when no userId
-      if (!userId && __DEV__) {
+      // Dev/demo mode fallback when no userId
+      if (!userId && isDemo) {
         const prefs = await loadDevPreferences();
         setDevPrefs(prefs);
         const p = generateDevPrompt(prefs, 'daily', historyRef.current);
@@ -340,8 +342,8 @@ export function useDailyPrompt(): {
 
   // Generate manual prompt on demand
   async function handleGenerateManualPrompt() {
-    // Dev mode: generate a preference-aware mock prompt
-    if (!userId && __DEV__) {
+    // Dev/demo mode: generate a preference-aware mock prompt
+    if (!userId && isDemo) {
       setGenerating(true);
       const prefs = devPrefs || await loadDevPreferences();
       const p = generateDevPrompt(prefs, 'manual', historyRef.current);
