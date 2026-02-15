@@ -21,13 +21,14 @@ import { COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
 const ONBOARDING_KEY = '@artspark:onboarding-progress';
 const DEV_PREFS_KEY = '@artspark:dev-preferences';
 const FREQUENCY_KEY = '@artspark:prompt-frequency';
+const WEEKLY_DAY_KEY = '@artspark:weekly-day';
 
-type PromptFrequency = 'daily' | 'every-other-day' | 'weekdays' | 'weekly';
+type PromptFrequency = 'daily' | 'every-other-day' | 'weekdays' | 'weekends' | 'weekly';
 
 /**
  * Check if today is a prompt day based on the user's frequency setting
  */
-function isPromptDay(frequency: PromptFrequency): boolean {
+function isPromptDay(frequency: PromptFrequency, weeklyDay: number = 1): boolean {
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 
@@ -42,8 +43,10 @@ function isPromptDay(frequency: PromptFrequency): boolean {
     }
     case 'weekdays':
       return dayOfWeek >= 1 && dayOfWeek <= 5;
+    case 'weekends':
+      return dayOfWeek === 0 || dayOfWeek === 6;
     case 'weekly':
-      return dayOfWeek === 1; // Mondays
+      return dayOfWeek === weeklyDay;
     default:
       return true;
   }
@@ -277,7 +280,9 @@ export function useDailyPrompt(): {
       // Check prompt frequency setting
       const storedFrequency = await AsyncStorage.getItem(FREQUENCY_KEY);
       const frequency = (storedFrequency as PromptFrequency) || 'daily';
-      if (!isPromptDay(frequency)) {
+      const storedDay = await AsyncStorage.getItem(WEEKLY_DAY_KEY);
+      const weeklyDay = storedDay !== null ? parseInt(storedDay, 10) : 1;
+      if (!isPromptDay(frequency, weeklyDay)) {
         setIsRestDay(true);
         setLoading(false);
         return;

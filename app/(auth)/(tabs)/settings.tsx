@@ -49,13 +49,24 @@ const THEME_OPTIONS: { id: ThemeMode; label: string; description: string }[] = [
   { id: 'system', label: 'System', description: 'Follow your device settings' },
 ];
 
-export type PromptFrequency = 'daily' | 'every-other-day' | 'weekdays' | 'weekly';
+export type PromptFrequency = 'daily' | 'every-other-day' | 'weekdays' | 'weekends' | 'weekly';
 
 const FREQUENCY_OPTIONS: { id: PromptFrequency; label: string; description: string }[] = [
   { id: 'daily', label: 'Daily', description: 'A new prompt every day' },
   { id: 'every-other-day', label: 'Every Other Day', description: 'Prompts on alternating days' },
   { id: 'weekdays', label: 'Weekdays Only', description: 'Monday through Friday' },
-  { id: 'weekly', label: 'Weekly', description: 'One prompt per week (Mondays)' },
+  { id: 'weekends', label: 'Weekends Only', description: 'Saturday and Sunday' },
+  { id: 'weekly', label: 'Weekly', description: 'One prompt per week' },
+];
+
+const DAY_OPTIONS: { id: number; label: string }[] = [
+  { id: 0, label: 'Sunday' },
+  { id: 1, label: 'Monday' },
+  { id: 2, label: 'Tuesday' },
+  { id: 3, label: 'Wednesday' },
+  { id: 4, label: 'Thursday' },
+  { id: 5, label: 'Friday' },
+  { id: 6, label: 'Saturday' },
 ];
 
 export default function Settings() {
@@ -78,6 +89,7 @@ export default function Settings() {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('developing');
   const [userTier, setUserTier] = useState<UserTier>('free');
   const [promptFrequency, setPromptFrequency] = useState<PromptFrequency>('daily');
+  const [weeklyDay, setWeeklyDay] = useState<number>(1); // 0=Sun..6=Sat, default Monday
   const [savingPreferences, setSavingPreferences] = useState(false);
   const [resettingHistory, setResettingHistory] = useState(false);
   const [editingSection, setEditingSection] = useState<string | null>(null);
@@ -88,10 +100,14 @@ export default function Settings() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Load prompt frequency from AsyncStorage
+        // Load prompt frequency and weekly day from AsyncStorage
         const storedFrequency = await AsyncStorage.getItem('@artspark:prompt-frequency');
         if (storedFrequency) {
           setPromptFrequency(storedFrequency as PromptFrequency);
+        }
+        const storedDay = await AsyncStorage.getItem('@artspark:weekly-day');
+        if (storedDay !== null) {
+          setWeeklyDay(parseInt(storedDay, 10));
         }
 
         if (__DEV__ && !session) {
@@ -216,6 +232,19 @@ export default function Settings() {
       setPromptFrequency(frequency);
       track('setting_changed', { setting: 'prompt_frequency', value: frequency });
       await AsyncStorage.setItem('@artspark:prompt-frequency', frequency);
+      // Don't close the section when selecting weekly — user still needs to pick a day
+      if (frequency !== 'weekly') {
+        setEditingSection(null);
+      }
+    },
+    [track]
+  );
+
+  const handleWeeklyDayChange = useCallback(
+    async (day: number) => {
+      setWeeklyDay(day);
+      track('setting_changed', { setting: 'weekly_day', value: DAY_OPTIONS[day]?.label });
+      await AsyncStorage.setItem('@artspark:weekly-day', String(day));
       setEditingSection(null);
     },
     [track]
@@ -486,7 +515,11 @@ export default function Settings() {
       <SettingSection title="Prompt Frequency">
         <SettingRow
           label="How Often"
-          description={FREQUENCY_OPTIONS.find(f => f.id === promptFrequency)?.label || 'Daily'}
+          description={
+            promptFrequency === 'weekly'
+              ? `Weekly (${DAY_OPTIONS[weeklyDay]?.label || 'Monday'}s)`
+              : FREQUENCY_OPTIONS.find(f => f.id === promptFrequency)?.label || 'Daily'
+          }
           onPress={() =>
             setEditingSection(editingSection === 'frequency' ? null : 'frequency')
           }
@@ -522,6 +555,38 @@ export default function Settings() {
                 </TouchableOpacity>
               );
             })}
+
+            {/* Day picker — shown when Weekly is selected */}
+            {promptFrequency === 'weekly' && (
+              <View className="mt-2">
+                <Text className="text-sm font-medium text-gray-600 mb-2 ml-1">
+                  Which day?
+                </Text>
+                <View className="flex-row flex-wrap">
+                  {DAY_OPTIONS.map((day) => {
+                    const selected = weeklyDay === day.id;
+                    return (
+                      <TouchableOpacity
+                        key={day.id}
+                        onPress={() => handleWeeklyDayChange(day.id)}
+                        className="mr-2 mb-2 rounded-lg border px-3 py-2"
+                        style={{
+                          borderColor: selected ? '#7C9A72' : '#E5E7EB',
+                          backgroundColor: selected ? '#F0F5EE' : '#FFFFFF',
+                        }}
+                      >
+                        <Text
+                          className="text-sm font-medium"
+                          style={{ color: selected ? '#7C9A72' : '#374151' }}
+                        >
+                          {day.label.slice(0, 3)}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
           </View>
         )}
       </SettingSection>
