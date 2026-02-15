@@ -17,8 +17,8 @@
       "bundleIdentifier": "com.artspark.app",
       "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "ArtSpark needs camera access so you can photograph your artwork and add it to your portfolio.",
-        "NSPhotoLibraryUsageDescription": "ArtSpark needs photo library access so you can select artwork photos to add to your portfolio.",
+        "NSCameraUsageDescription": "ArtSpark needs camera access so you can photograph your artwork and add it to your gallery.",
+        "NSPhotoLibraryUsageDescription": "ArtSpark needs photo library access so you can select artwork photos to add to your gallery.",
         "NSPhotoLibraryAddUsageDescription": "ArtSpark needs permission to save share cards to your photo library."
       }
     },
@@ -35,7 +35,8 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
       "expo-router",
@@ -44,7 +45,9 @@
       "expo-notifications"
     ],
     "extra": {
-      "router": {},
+      "router": {
+        "origin": "https://vincerm17.github.io"
+      },
       "eas": {
         "projectId": "05a61b00-d0c0-4a44-835f-ee2c4c4b8228"
       }
