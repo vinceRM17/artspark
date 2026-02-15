@@ -3,6 +3,7 @@
  *
  * Provides real-world reference photos of prompt subjects for artists.
  * Priority: Pexels (best relevance) -> Unsplash -> Wikimedia Commons (fallback).
+ * For mythological/fantasy subjects, Wikimedia is tried first (has art/sculpture images).
  * Deduplicates by both ID and URL to prevent duplicate photos.
  */
 
@@ -109,6 +110,86 @@ const MEDIUM_MODIFIERS: Record<string, string> = {
   'digital': 'vivid colorful',
 };
 
+// Keywords for mythological/fantasy/abstract subjects that stock photo sites can't handle.
+// Maps to more photo-friendly search terms (sculptures, art, etc.).
+const SUBJECT_REWRITES: Record<string, string> = {
+  // Mythological figures
+  'anubis': 'Anubis Egyptian god statue sculpture',
+  'medusa': 'Medusa sculpture statue art',
+  'poseidon': 'Poseidon statue sculpture Greek',
+  'zeus': 'Zeus statue sculpture Greek',
+  'athena': 'Athena statue sculpture Greek',
+  'apollo': 'Apollo statue sculpture Greek',
+  'hades': 'Hades sculpture statue Greek',
+  'thor': 'Thor Norse mythology sculpture',
+  'odin': 'Odin Norse mythology sculpture',
+  'isis': 'Isis Egyptian goddess statue',
+  'ra': 'Ra Egyptian sun god statue',
+  'horus': 'Horus Egyptian god statue',
+  'minotaur': 'Minotaur sculpture statue art',
+  'cerberus': 'Cerberus sculpture statue mythology',
+  'cyclops': 'Cyclops sculpture mythology art',
+  'centaur': 'centaur sculpture statue mythology',
+  'sphinx': 'Sphinx statue sculpture ancient',
+  'valkyrie': 'Valkyrie Norse sculpture art',
+  'ganesha': 'Ganesha statue sculpture Hindu',
+  'shiva': 'Shiva statue sculpture Hindu',
+  'buddha': 'Buddha statue sculpture',
+  // Fantasy creatures
+  'dragon': 'dragon sculpture art statue',
+  'unicorn': 'unicorn sculpture art statue',
+  'phoenix': 'phoenix sculpture art painting',
+  'griffin': 'griffin sculpture art statue',
+  'griffon': 'griffon sculpture art statue',
+  'gryphon': 'gryphon sculpture art statue',
+  'pegasus': 'Pegasus sculpture statue winged horse',
+  'kraken': 'kraken sea monster sculpture art',
+  'hydra': 'hydra sculpture mythology art',
+  'fairy': 'fairy sculpture art statue',
+  'mermaid': 'mermaid sculpture art statue',
+  'werewolf': 'werewolf sculpture art dark',
+  'goblin': 'goblin sculpture art fantasy',
+  'troll': 'troll sculpture art fantasy',
+  // Abstract concepts (use art-related terms)
+  'time': 'time concept art surreal clock',
+  'loneliness': 'solitude alone art photography',
+  'chaos': 'chaos abstract art dynamic',
+  'death': 'memento mori art sculpture',
+  'dream': 'surreal dreamlike art painting',
+  'eternity': 'infinity eternity art sculpture',
+  'fate': 'fate destiny art classical painting',
+  'freedom': 'freedom art sculpture wings',
+};
+
+/**
+ * Check if the extracted query contains a mythological/fantasy/abstract subject
+ * and rewrite it to terms that stock photo sites can actually find.
+ * Returns { query, isMythological } so callers know whether to prioritize Wikimedia.
+ */
+function rewriteForPhotoSearch(query: string): { query: string; isMythological: boolean } {
+  const lowerQuery = query.toLowerCase();
+  for (const [keyword, rewrite] of Object.entries(SUBJECT_REWRITES)) {
+    // Match whole word to avoid false positives (e.g. "rather" matching "ra")
+    const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+    if (regex.test(lowerQuery)) {
+      return { query: rewrite, isMythological: true };
+    }
+  }
+  return { query, isMythological: false };
+}
+
+/**
+ * Check if a Pexels/Unsplash result's alt text is relevant to the search query.
+ * Returns true if at least one meaningful word from the query appears in the alt text.
+ */
+function isRelevantResult(altText: string, searchQuery: string): boolean {
+  if (!altText) return false;
+  const stopWords = new Set(['a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'for', 'and', 'or', 'with', 'is', 'are', 'was', 'were', 'art', 'photo', 'soft', 'light', 'rich', 'color', 'high', 'contrast', 'dramatic', 'shadow', 'vivid', 'colorful', 'detail', 'pastel', 'tones']);
+  const queryWords = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
+  const altLower = altText.toLowerCase();
+  return queryWords.some(word => altLower.includes(word));
+}
+
 /**
  * Fetch reference images from Pexels (primary source)
  * Free API with high-quality, relevant photos
@@ -129,6 +210,11 @@ async function fetchFromPexels(
     const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
     query = queries[Math.floor(Math.random() * queries.length)];
   }
+
+  // Rewrite mythological/fantasy subjects to photo-friendly terms
+  const { query: rewrittenQuery } = rewriteForPhotoSearch(query);
+  query = rewrittenQuery;
+
   const modifier = MEDIUM_MODIFIERS[medium];
   if (modifier) query += ' ' + modifier;
   const page = Math.floor(Math.random() * 3) + 1;
@@ -151,12 +237,16 @@ async function fetchFromPexels(
 
     if (isDuplicate(id, url)) continue;
 
+    // Filter out irrelevant results by checking alt text against query
+    const alt = photo.alt || '';
+    if (alt && !isRelevantResult(alt, query)) continue;
+
     results.push({
       id,
       url: photo.src.medium,
       thumbUrl: photo.src.small,
       photographer: photo.photographer || 'Pexels',
-      alt: photo.alt || query,
+      alt: alt || query,
       source: 'pexels',
     });
 
@@ -184,6 +274,11 @@ async function fetchFromUnsplash(
     const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
     query = queries[Math.floor(Math.random() * queries.length)];
   }
+
+  // Rewrite mythological/fantasy subjects to photo-friendly terms
+  const { query: rewrittenQuery } = rewriteForPhotoSearch(query);
+  query = rewrittenQuery;
+
   const modifier = MEDIUM_MODIFIERS[medium];
   if (modifier) query += ' ' + modifier;
 
@@ -203,12 +298,16 @@ async function fetchFromUnsplash(
     const url = photo.urls.small;
     if (isDuplicate(photo.id, url)) continue;
 
+    // Filter out irrelevant results by checking alt text against query
+    const alt = photo.alt_description || '';
+    if (alt && !isRelevantResult(alt, query)) continue;
+
     results.push({
       id: photo.id,
       url: photo.urls.small,
       thumbUrl: photo.urls.thumb,
       photographer: photo.user.name,
-      alt: photo.alt_description || query,
+      alt: alt || query,
       source: 'unsplash',
     });
 
@@ -311,7 +410,21 @@ export async function fetchReferenceImages(
 ): Promise<ReferenceImage[]> {
   resetIfSubjectChanged(subject);
 
-  // Try Pexels first (best relevance)
+  // Check if the prompt contains a mythological/fantasy subject
+  const extractedQuery = promptText ? extractSearchQuery(promptText) : subject;
+  const { isMythological } = rewriteForPhotoSearch(extractedQuery);
+
+  // For mythological/fantasy subjects, try Wikimedia first (has art/sculpture/historical images)
+  if (isMythological) {
+    try {
+      const results = await fetchFromWikimediaCommons(subject, medium, count, promptText);
+      if (results.length > 0) return results;
+    } catch {
+      // Fall through to stock photo sites
+    }
+  }
+
+  // Try Pexels (best relevance for normal subjects)
   try {
     const results = await fetchFromPexels(subject, medium, count, promptText);
     if (results.length > 0) return results;
@@ -329,10 +442,14 @@ export async function fetchReferenceImages(
     }
   }
 
-  // Fallback to Wikimedia Commons
-  try {
-    return await fetchFromWikimediaCommons(subject, medium, count, promptText);
-  } catch {
-    return [];
+  // Fallback to Wikimedia Commons (skip if already tried for mythological)
+  if (!isMythological) {
+    try {
+      return await fetchFromWikimediaCommons(subject, medium, count, promptText);
+    } catch {
+      return [];
+    }
   }
+
+  return [];
 }
