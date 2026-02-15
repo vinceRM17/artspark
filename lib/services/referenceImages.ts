@@ -15,6 +15,7 @@ export type ReferenceImage = {
   thumbUrl: string;
   photographer: string;
   alt: string;
+  source: 'pexels' | 'unsplash' | 'wikimedia';
 };
 
 // Track seen image IDs AND URLs per session to catch duplicates
@@ -156,6 +157,7 @@ async function fetchFromPexels(
       thumbUrl: photo.src.small,
       photographer: photo.photographer || 'Pexels',
       alt: photo.alt || query,
+      source: 'pexels',
     });
 
     markSeen(id, url);
@@ -207,6 +209,7 @@ async function fetchFromUnsplash(
       thumbUrl: photo.urls.thumb,
       photographer: photo.user.name,
       alt: photo.alt_description || query,
+      source: 'unsplash',
     });
 
     markSeen(photo.id, url);
@@ -283,6 +286,7 @@ async function fetchFromWikimediaCommons(
       thumbUrl: imageUrl,
       photographer: artist,
       alt: page.title?.replace('File:', '').replace(/\.[^.]+$/, '') || 'Reference photo',
+      source: 'wikimedia',
     });
 
     markSeen(pageId, imageUrl);

@@ -575,6 +575,25 @@ export default function Home() {
                     );
                   })}
                 </View>
+                {/* Required attribution */}
+                {referenceImages.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      const source = referenceImages[0].source;
+                      if (source === 'pexels') Linking.openURL('https://www.pexels.com');
+                      else if (source === 'unsplash') Linking.openURL('https://unsplash.com');
+                      else Linking.openURL('https://commons.wikimedia.org');
+                    }}
+                    style={{ marginTop: 8, alignSelf: 'center' }}
+                    activeOpacity={0.6}
+                  >
+                    <Text style={{ fontSize: 11, color: colors.textMuted }}>
+                      {referenceImages[0].source === 'pexels' ? 'Photos provided by Pexels'
+                        : referenceImages[0].source === 'unsplash' ? 'Photos provided by Unsplash'
+                        : 'Photos from Wikimedia Commons'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </Animated.View>
