@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import { Redirect, Stack, usePathname } from 'expo-router';
 import * as Sentry from '@/lib/services/sentry';
 import { useSession } from '@/components/auth/SessionProvider';
@@ -35,9 +36,9 @@ export default function AuthLayout() {
     );
   }
 
-  // Dev bypass: skip auth check in development
-  // Redirect to sign-in if no session (production only)
-  if (!session && !__DEV__) {
+  // Dev bypass: skip auth check in development and web demo
+  // Redirect to sign-in if no session (native production only)
+  if (!session && !__DEV__ && Platform.OS !== 'web') {
     return <Redirect href="/sign-in" />;
   }
 
@@ -50,8 +51,8 @@ export default function AuthLayout() {
     );
   }
 
-  // Redirect to onboarding if not completed (except in dev mode)
-  if (!onboardingComplete && !__DEV__) {
+  // Redirect to onboarding if not completed (except in dev mode and web demo)
+  if (!onboardingComplete && !__DEV__ && Platform.OS !== 'web') {
     return <Redirect href="/onboarding/step-1" />;
   }
 
