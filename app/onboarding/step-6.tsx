@@ -40,9 +40,59 @@ export default function Step6() {
     setShowPermissionExplanation(false);
   };
 
-  const handleMaybeLater = () => {
+  const handleMaybeLater = async () => {
     setPermissionGranted(false);
-    setShowPermissionExplanation(false);
+    // Skip the time picker and go straight to completing onboarding
+    setLoading(true);
+    try {
+      const userId = session?.user?.id || (__DEV__ ? 'dev-user' : null);
+      if (!userId) {
+        Alert.alert('Error', 'No user session found. Please sign in again.');
+        setLoading(false);
+        return;
+      }
+
+      const progressJson = await AsyncStorage.getItem(STORAGE_KEY);
+      const progress: OnboardingProgress = progressJson
+        ? JSON.parse(progressJson)
+        : {};
+
+      if (session?.user?.id) {
+        await savePreferences(userId, {
+          art_mediums: progress.mediums || [],
+          color_palettes: progress.colorPalettes || [],
+          subjects: progress.subjects || [],
+          exclusions: progress.exclusions || [],
+          difficulty: progress.difficulty || 'developing',
+          notification_time: '09:00:00',
+          notification_enabled: false,
+          onboarding_completed: true,
+        });
+      }
+
+      if (__DEV__) {
+        await AsyncStorage.setItem(DEV_PREFS_KEY, JSON.stringify({
+          mediums: progress.mediums || [],
+          subjects: progress.subjects || [],
+          exclusions: progress.exclusions || [],
+          colorPalettes: progress.colorPalettes || [],
+          difficulty: progress.difficulty || 'developing',
+        }));
+      }
+
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      router.replace('/(auth)');
+    } catch (error) {
+      console.error('Failed to complete onboarding:', error);
+      Alert.alert(
+        'Error',
+        error instanceof Error
+          ? error.message
+          : 'Failed to save preferences. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleComplete = async () => {
