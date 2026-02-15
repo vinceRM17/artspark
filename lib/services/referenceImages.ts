@@ -211,29 +211,37 @@ const SUBJECT_REWRITES: Record<string, string> = {
 /**
  * Check if the extracted query contains a mythological/fantasy/abstract subject
  * and rewrite it to terms that stock photo sites can actually find.
- * Returns { query, isMythological } so callers know whether to prioritize Wikimedia.
+ * Returns { query, isMythological, primaryKeyword } so callers can do
+ * strict relevance filtering on the actual subject (e.g. "centaur").
  */
-function rewriteForPhotoSearch(query: string): { query: string; isMythological: boolean } {
+function rewriteForPhotoSearch(query: string): { query: string; isMythological: boolean; primaryKeyword: string | null } {
   const lowerQuery = query.toLowerCase();
   for (const [keyword, rewrite] of Object.entries(SUBJECT_REWRITES)) {
     // Match whole word to avoid false positives (e.g. "rather" matching "ra")
     const regex = new RegExp(`\\b${keyword}\\b`, 'i');
     if (regex.test(lowerQuery)) {
-      return { query: rewrite, isMythological: true };
+      return { query: rewrite, isMythological: true, primaryKeyword: keyword };
     }
   }
-  return { query, isMythological: false };
+  return { query, isMythological: false, primaryKeyword: null };
 }
 
 /**
  * Check if a Pexels/Unsplash result's alt text is relevant to the search query.
- * Returns true if at least one meaningful word from the query appears in the alt text.
+ * When a primaryKeyword is provided (mythological/fantasy subjects), the alt text
+ * MUST contain that keyword — generic matches on "sculpture" or "statue" aren't enough.
  */
-function isRelevantResult(altText: string, searchQuery: string): boolean {
+function isRelevantResult(altText: string, searchQuery: string, primaryKeyword?: string | null): boolean {
   if (!altText) return false;
+  const altLower = altText.toLowerCase();
+
+  // For mythological/fantasy subjects, require the specific creature/figure name
+  if (primaryKeyword) {
+    return altLower.includes(primaryKeyword.toLowerCase());
+  }
+
   const stopWords = new Set(['a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'for', 'and', 'or', 'with', 'is', 'are', 'was', 'were', 'art', 'photo', 'soft', 'light', 'rich', 'color', 'high', 'contrast', 'dramatic', 'shadow', 'vivid', 'colorful', 'detail', 'pastel', 'tones']);
   const queryWords = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
-  const altLower = altText.toLowerCase();
   return queryWords.some(word => altLower.includes(word));
 }
 
@@ -264,7 +272,7 @@ async function fetchFromPexels(
   }
 
   // Rewrite mythological/fantasy subjects to photo-friendly terms
-  const { query: rewrittenQuery } = rewriteForPhotoSearch(query);
+  const { query: rewrittenQuery, primaryKeyword } = rewriteForPhotoSearch(query);
   query = rewrittenQuery;
 
   const modifier = MEDIUM_MODIFIERS[medium];
@@ -292,7 +300,7 @@ async function fetchFromPexels(
     // Filter out irrelevant results by checking alt text against query
     // Skip photos with no alt text — can't verify relevance
     const alt = photo.alt || '';
-    if (!alt || !isRelevantResult(alt, query)) continue;
+    if (!alt || !isRelevantResult(alt, query, primaryKeyword)) continue;
 
     results.push({
       id,
@@ -334,7 +342,7 @@ async function fetchFromUnsplash(
   }
 
   // Rewrite mythological/fantasy subjects to photo-friendly terms
-  const { query: rewrittenQuery } = rewriteForPhotoSearch(query);
+  const { query: rewrittenQuery, primaryKeyword } = rewriteForPhotoSearch(query);
   query = rewrittenQuery;
 
   const modifier = MEDIUM_MODIFIERS[medium];
@@ -359,7 +367,7 @@ async function fetchFromUnsplash(
     // Filter out irrelevant results by checking alt text against query
     // Skip photos with no alt text — can't verify relevance
     const alt = photo.alt_description || '';
-    if (!alt || !isRelevantResult(alt, query)) continue;
+    if (!alt || !isRelevantResult(alt, query, primaryKeyword)) continue;
 
     results.push({
       id: photo.id,
