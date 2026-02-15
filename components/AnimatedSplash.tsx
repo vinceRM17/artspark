@@ -94,7 +94,7 @@ export default function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
           ArtSpark
         </Animated.Text>
         <Animated.Text style={[styles.tagline, taglineStyle]}>
-          Your daily creative spark
+          Ignite your passion for creation
         </Animated.Text>
       </View>
     </Animated.View>

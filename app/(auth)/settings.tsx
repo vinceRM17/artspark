@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   TextInput,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSession } from '@/components/auth/SessionProvider';
 import { router } from 'expo-router';
 import {
@@ -47,6 +48,15 @@ const THEME_OPTIONS: { id: ThemeMode; label: string; description: string }[] = [
   { id: 'system', label: 'System', description: 'Follow your device settings' },
 ];
 
+export type PromptFrequency = 'daily' | 'every-other-day' | 'weekdays' | 'weekly';
+
+const FREQUENCY_OPTIONS: { id: PromptFrequency; label: string; description: string }[] = [
+  { id: 'daily', label: 'Daily', description: 'A new prompt every day' },
+  { id: 'every-other-day', label: 'Every Other Day', description: 'Prompts on alternating days' },
+  { id: 'weekdays', label: 'Weekdays Only', description: 'Monday through Friday' },
+  { id: 'weekly', label: 'Weekly', description: 'One prompt per week (Mondays)' },
+];
+
 export default function Settings() {
   const { session, signOut } = useSession();
   const userId = session?.user?.id || (__DEV__ ? 'dev-user' : '');
@@ -65,6 +75,7 @@ export default function Settings() {
   const [exclusions, setExclusions] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('developing');
   const [userTier, setUserTier] = useState<UserTier>('free');
+  const [promptFrequency, setPromptFrequency] = useState<PromptFrequency>('daily');
   const [savingPreferences, setSavingPreferences] = useState(false);
   const [resettingHistory, setResettingHistory] = useState(false);
   const [editingSection, setEditingSection] = useState<string | null>(null);
@@ -75,6 +86,12 @@ export default function Settings() {
   useEffect(() => {
     async function loadData() {
       try {
+        // Load prompt frequency from AsyncStorage
+        const storedFrequency = await AsyncStorage.getItem('@artspark:prompt-frequency');
+        if (storedFrequency) {
+          setPromptFrequency(storedFrequency as PromptFrequency);
+        }
+
         if (__DEV__ && !session) {
           setMediums(['watercolor', 'pencil']);
           setSubjects(['landscapes', 'botanicals']);
@@ -189,6 +206,15 @@ export default function Settings() {
       }
     },
     [notificationEnabled, userId]
+  );
+
+  const handleFrequencyChange = useCallback(
+    async (frequency: PromptFrequency) => {
+      setPromptFrequency(frequency);
+      await AsyncStorage.setItem('@artspark:prompt-frequency', frequency);
+      setEditingSection(null);
+    },
+    []
   );
 
   const handleTogglePreference = useCallback(
@@ -450,6 +476,50 @@ export default function Settings() {
             />
           }
         />
+      </SettingSection>
+
+      {/* Section: Prompt Frequency */}
+      <SettingSection title="Prompt Frequency">
+        <SettingRow
+          label="How Often"
+          description={FREQUENCY_OPTIONS.find(f => f.id === promptFrequency)?.label || 'Daily'}
+          onPress={() =>
+            setEditingSection(editingSection === 'frequency' ? null : 'frequency')
+          }
+          rightElement={
+            <Text className="text-gray-400 text-sm">
+              {editingSection === 'frequency' ? 'Close' : 'Change'}
+            </Text>
+          }
+        />
+        {editingSection === 'frequency' && (
+          <View className="px-4 py-3 bg-gray-50">
+            {FREQUENCY_OPTIONS.map((option) => {
+              const selected = promptFrequency === option.id;
+              return (
+                <TouchableOpacity
+                  key={option.id}
+                  onPress={() => handleFrequencyChange(option.id)}
+                  className="mb-2 rounded-xl border p-4"
+                  style={{
+                    borderColor: selected ? '#7C9A72' : '#E5E7EB',
+                    backgroundColor: selected ? '#F0F5EE' : '#FFFFFF',
+                  }}
+                >
+                  <Text
+                    className="font-semibold text-base"
+                    style={{ color: selected ? '#7C9A72' : '#374151' }}
+                  >
+                    {option.label}
+                  </Text>
+                  <Text className="text-xs text-gray-400 mt-1">
+                    {option.description}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
       </SettingSection>
 
       {/* Section: Appearance */}

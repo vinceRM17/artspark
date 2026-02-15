@@ -6,6 +6,7 @@
  * and {subject} placeholders.
  *
  * Templates are tagged with a tier:
+ * - 'kids': Fun, playful, simple (for Kids level)
  * - 'guided': Step-by-step, encouraging (for Explorer level)
  * - 'standard': Balanced direction (for Developing/Confident levels)
  * - 'open': Minimal, assumes expertise (for Master level)
@@ -21,6 +22,30 @@ type PromptTemplate = {
 };
 
 const TEMPLATES: PromptTemplate[] = [
+  // === KIDS TIER — fun, playful, simple ===
+
+  // Universal kids
+  { template: "Draw your favorite {subject} using {medium} — make it as colorful as you want!", tier: 'kids' },
+  { template: "Can you draw {subject} using {medium}? Add your own fun details!", tier: 'kids' },
+  { template: "Use {medium} to create {subject} — there's no wrong way to do it!", tier: 'kids' },
+  { template: "Let's make art! Draw {subject} with {medium} and see what happens", tier: 'kids' },
+  { template: "Today's art adventure: create {subject} using {medium}!", tier: 'kids' },
+  { template: "Grab your {medium} and draw {subject} — be as creative as you like!", tier: 'kids' },
+  { template: "Time to get creative! Make {subject} with {medium} and add a fun background", tier: 'kids' },
+  { template: "Draw {subject} using {medium} — what colors will you choose?", tier: 'kids' },
+
+  // Subject-specific kids
+  { template: "Draw your dream {subject} using {medium} — it can be silly or serious!", tier: 'kids', subjects: ['animals', 'fantasy', 'mythology'] },
+  { template: "Use {medium} to draw {subject} you might see outside your window", tier: 'kids', subjects: ['landscapes', 'urban', 'botanicals', 'architecture'] },
+  { template: "Draw {subject} using {medium} — what would you put on the table?", tier: 'kids', subjects: ['still-life', 'food'] },
+  { template: "Create a fun {subject} pattern with {medium} — repeat shapes and colors!", tier: 'kids', subjects: ['abstract', 'patterns'] },
+
+  // Medium-specific kids
+  { template: "Splash some {medium} on your paper and turn {subject} into something magical!", tier: 'kids', mediums: ['watercolor', 'gouache'] },
+  { template: "Use your {medium} to sketch {subject} — start with big shapes, then add details!", tier: 'kids', mediums: ['pencil', 'charcoal'] },
+  { template: "Get your {medium} ready and paint {subject} with your brightest colors!", tier: 'kids', mediums: ['acrylic', 'oil', 'gouache'] },
+  { template: "Create {subject} with {medium} on your screen — try out different brushes!", tier: 'kids', mediums: ['digital'] },
+
   // === GUIDED TIER (Explorer) — step-by-step, encouraging ===
 
   // Watercolor guided

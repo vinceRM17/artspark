@@ -59,7 +59,7 @@ function getGreeting(): string {
 }
 
 export default function Home() {
-  const { prompt, loading, error, generating, generateManualPrompt } = useDailyPrompt();
+  const { prompt, loading, error, generating, isRestDay, generateManualPrompt } = useDailyPrompt();
   const { streak, loading: streakLoading } = useStreak();
   const { active: activeChallenges } = useChallenges();
   const { unlockedCount, totalCount } = useBadges();
@@ -199,6 +199,60 @@ export default function Home() {
           <Text style={{ color: '#FFF', textAlign: 'center', fontWeight: '600' }}>Try Again</Text>
         </TouchableOpacity>
       </View>
+    );
+  }
+
+  // Rest day (prompt frequency setting)
+  if (isRestDay && !prompt) {
+    return (
+      <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 40 }}>
+          <Text style={{ fontSize: 24, fontWeight: '600', color: colors.text, marginBottom: 8 }}>
+            {greeting}!
+          </Text>
+          <Animated.View
+            entering={FadeInDown.duration(500)}
+            style={{
+              backgroundColor: colors.surface,
+              borderRadius: 16,
+              padding: 24,
+              marginTop: 16,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 40, marginBottom: 12 }}>{'\uD83C\uDFA8'}</Text>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: colors.text, textAlign: 'center', marginBottom: 8 }}>
+              Rest Day
+            </Text>
+            <Text style={{ fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 }}>
+              No prompt scheduled for today based on your frequency settings. Enjoy the break, or generate one anyway!
+            </Text>
+            <TouchableOpacity
+              onPress={async () => {
+                await generateManualPrompt();
+              }}
+              style={{
+                backgroundColor: colors.primary,
+                borderRadius: 12,
+                paddingVertical: 12,
+                paddingHorizontal: 24,
+                marginTop: 16,
+              }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: '600', fontSize: 14 }}>
+                Generate Prompt Anyway
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* Still show streak on rest days */}
+          {!streakLoading && streak && (
+            <View style={{ marginTop: 20 }}>
+              <StreakCounter streak={streak} />
+            </View>
+          )}
+        </View>
+      </ScrollView>
     );
   }
 

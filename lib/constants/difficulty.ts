@@ -5,9 +5,9 @@
  * color rule chance, and artistic direction/tone.
  */
 
-export type DifficultyLevel = 'explorer' | 'developing' | 'confident' | 'master';
+export type DifficultyLevel = 'kids' | 'explorer' | 'developing' | 'confident' | 'master';
 
-export type TemplateTier = 'guided' | 'standard' | 'open';
+export type TemplateTier = 'kids' | 'guided' | 'standard' | 'open';
 
 export type DifficultyOption = {
   id: DifficultyLevel;
@@ -20,6 +20,15 @@ export type DifficultyOption = {
 };
 
 export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
+  {
+    id: 'kids',
+    label: 'Kids',
+    description: 'Fun, simple prompts perfect for young artists and families',
+    twistChance: 0,
+    templateTier: 'kids',
+    colorRuleChance: 0.1,
+    promptTone: 'Fun, playful, encouraging',
+  },
   {
     id: 'explorer',
     label: 'Explorer',
@@ -82,5 +91,5 @@ export function getDifficultyOption(id: string): DifficultyOption {
   }
 
   // Default to developing
-  return DIFFICULTY_OPTIONS[1];
+  return DIFFICULTY_OPTIONS[2];
 }

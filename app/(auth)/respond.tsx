@@ -206,6 +206,18 @@ export default function Respond() {
             <Text style={{ color: colors.textSecondary, fontSize: 12, textAlign: 'center', marginTop: 8 }}>
               {images.length}/3 photos
             </Text>
+
+            {/* Photo ownership disclaimer */}
+            <View style={{
+              backgroundColor: colors.primaryLight,
+              borderRadius: 8,
+              padding: 12,
+              marginTop: 12,
+            }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 11, lineHeight: 16 }}>
+                Your photos are yours. ArtSpark does not share your images with AI services or use them for commercial purposes. All uploaded artwork remains the property of the creator.
+              </Text>
+            </View>
           </View>
 
           {/* Notes section */}

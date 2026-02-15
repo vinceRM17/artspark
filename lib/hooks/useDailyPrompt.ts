@@ -20,6 +20,34 @@ import { COLOR_PALETTE_OPTIONS } from '@/lib/constants/preferences';
 
 const ONBOARDING_KEY = '@artspark:onboarding-progress';
 const DEV_PREFS_KEY = '@artspark:dev-preferences';
+const FREQUENCY_KEY = '@artspark:prompt-frequency';
+
+type PromptFrequency = 'daily' | 'every-other-day' | 'weekdays' | 'weekly';
+
+/**
+ * Check if today is a prompt day based on the user's frequency setting
+ */
+function isPromptDay(frequency: PromptFrequency): boolean {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+
+  switch (frequency) {
+    case 'daily':
+      return true;
+    case 'every-other-day': {
+      // Use day-of-year to alternate
+      const start = new Date(now.getFullYear(), 0, 0);
+      const dayOfYear = Math.floor((now.getTime() - start.getTime()) / 86400000);
+      return dayOfYear % 2 === 0;
+    }
+    case 'weekdays':
+      return dayOfWeek >= 1 && dayOfWeek <= 5;
+    case 'weekly':
+      return dayOfWeek === 1; // Mondays
+    default:
+      return true;
+  }
+}
 
 type DevPreferences = {
   mediums: string[];
@@ -36,6 +64,17 @@ const DEFAULT_DEV_PREFS: DevPreferences = {
   colorPalettes: [],
   difficulty: 'developing',
 };
+
+/**
+ * Kids-level encouragements for dev mode prompts
+ */
+const KIDS_TIPS = [
+  "Remember: there's no wrong way to make art — have fun!",
+  "You're doing great! Every artist started just like you.",
+  "Art is about having fun — don't worry about making it perfect!",
+  "Try using your favorite colors — what makes you happy?",
+  "Show someone your art when you're done — they'll love it!",
+];
 
 /**
  * Explorer-level tips for dev mode prompts
@@ -170,8 +209,10 @@ function generateDevPrompt(
     promptText += '.';
   }
 
-  // Append explorer tip for beginner level
-  if (difficulty.id === 'explorer') {
+  // Append encouraging tip for kids/explorer levels
+  if (difficulty.id === 'kids') {
+    promptText += ' ' + randomItem(KIDS_TIPS);
+  } else if (difficulty.id === 'explorer') {
     promptText += ' ' + randomItem(EXPLORER_TIPS);
   }
 
@@ -194,6 +235,7 @@ export function useDailyPrompt(): {
   loading: boolean;
   error: string | null;
   generating: boolean;
+  isRestDay: boolean;
   generateManualPrompt: () => Promise<void>;
 } {
   const [prompt, setPrompt] = useState<Prompt | null>(null);
@@ -201,6 +243,7 @@ export function useDailyPrompt(): {
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [devPrefs, setDevPrefs] = useState<DevPreferences | null>(null);
+  const [isRestDay, setIsRestDay] = useState(false);
 
   // Track recent selections to prevent repetition
   const historyRef = useRef<RecentHistory>({
@@ -230,6 +273,15 @@ export function useDailyPrompt(): {
   // Fetch daily prompt on mount
   useEffect(() => {
     async function fetchDailyPrompt() {
+      // Check prompt frequency setting
+      const storedFrequency = await AsyncStorage.getItem(FREQUENCY_KEY);
+      const frequency = (storedFrequency as PromptFrequency) || 'daily';
+      if (!isPromptDay(frequency)) {
+        setIsRestDay(true);
+        setLoading(false);
+        return;
+      }
+
       // Dev mode fallback when no userId
       if (!userId && __DEV__) {
         const prefs = await loadDevPreferences();
@@ -314,6 +366,7 @@ export function useDailyPrompt(): {
     loading,
     error,
     generating,
+    isRestDay,
     generateManualPrompt: handleGenerateManualPrompt,
   };
 }
