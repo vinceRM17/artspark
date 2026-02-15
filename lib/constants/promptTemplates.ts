@@ -38,6 +38,10 @@ const TEMPLATES: PromptTemplate[] = [
   { template: "Time to get creative! Paint {subject} with {medium} and add a fun background", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
   { template: "Paint {subject} using {medium} — what colors will you choose?", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
 
+  // Photography
+  { template: "Photograph {subject} — try to capture it in a fun and surprising way!", tier: 'kids', mediums: ['photography'] },
+  { template: "Grab your camera and shoot {subject} — what makes it interesting to you?", tier: 'kids', mediums: ['photography'] },
+
   // Universal (verb-neutral — works for any medium)
   { template: "Use {medium} to create {subject} — there's no wrong way to do it!", tier: 'kids' },
   { template: "Let's make art! Create {subject} with {medium} and see what happens", tier: 'kids' },
@@ -60,6 +64,10 @@ const TEMPLATES: PromptTemplate[] = [
 
   // Digital guided
   { template: "Create {subject} digitally — start with a rough sketch on one layer, then add color on a layer underneath", tier: 'guided', mediums: ['digital'] },
+
+  // Photography guided
+  { template: "Photograph {subject} — try framing it from three different angles and pick your favorite", tier: 'guided', mediums: ['photography'] },
+  { template: "Capture {subject} with your camera — pay attention to where the light is coming from", tier: 'guided', mediums: ['photography'] },
 
   // Universal guided
   { template: "Create {subject} with {medium} today — close your eyes and picture it for a moment before you begin", tier: 'guided' },
@@ -106,6 +114,10 @@ const TEMPLATES: PromptTemplate[] = [
   { template: "Capture {subject} with {medium} — what makes this moment special?", tier: 'standard', subjects: ['animals', 'people-portraits'] },
   { template: "Create {subject} with {medium} — play with what's close up and what's far away", tier: 'standard', subjects: ['landscapes', 'urban', 'architecture', 'botanicals'] },
 
+  // Photography
+  { template: "Photograph {subject}, focusing on composition and the interplay of light and shadow", tier: 'standard', mediums: ['photography'] },
+  { template: "Shoot {subject} with intention — find the angle that tells the most compelling story", tier: 'standard', mediums: ['photography'] },
+
   // Universal standard
   { template: "Create {subject} with {medium} — focus on what catches your eye first", tier: 'standard' },
   { template: "Create {subject} with {medium} — take a moment to really look before you begin", tier: 'standard' },
@@ -124,6 +136,7 @@ const TEMPLATES: PromptTemplate[] = [
   { template: "Distill {subject} to its essence using {medium}", tier: 'open' },
 
   // Medium-specific open
+  { template: "{subject} — one frame, no editing. Capture it in-camera", tier: 'open', mediums: ['photography'] },
   { template: "{subject} — push your {medium} between very wet and very dry", tier: 'open', mediums: ['watercolor', 'ink'] },
   { template: "{subject} with {medium} — contrast thick, heavy strokes with thin, delicate ones", tier: 'open', mediums: ['oil', 'acrylic'] },
   { template: "{subject} with {medium}. One continuous line, no lifting", tier: 'open', mediums: ['pencil', 'ink', 'charcoal'] },
@@ -163,7 +176,7 @@ export function getPromptTemplate(
     'watercolor': 'watercolor', 'gouache': 'gouache', 'acrylic': 'acrylic',
     'oil': 'oil paint', 'pencil': 'pencil', 'ink': 'ink', 'digital': 'digital',
     'collage': 'collage', 'paper-art': 'paper art', 'pastel': 'pastel',
-    'charcoal': 'charcoal', 'mixed-media': 'mixed media',
+    'charcoal': 'charcoal', 'mixed-media': 'mixed media', 'photography': 'photography',
   };
 
   // Specific, evocative subject variations — a random one is picked each time

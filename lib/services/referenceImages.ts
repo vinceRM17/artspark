@@ -83,13 +83,13 @@ function extractSearchQuery(promptText: string): string {
 
   // 1) Strip medium + its preposition ("with oil paint", "using watercolor", "in pencil")
   query = query.replace(
-    /\s+(using|with|in)\s+(oil paint|watercolor|gouache|acrylic|pencil|charcoal|ink|pastel|digital|collage|mixed media|paper art)\b.*/gi,
+    /\s+(using|with|in)\s+(oil paint|watercolor|gouache|acrylic|pencil|charcoal|ink|pastel|digital|collage|mixed media|paper art|photography)\b.*/gi,
     ''
   );
 
   // 2) Strip leading action verb: "Create a park bench" → "a park bench"
   query = query.replace(
-    /^(draw|paint|sketch|create|imagine|capture|explore|interpret|reimagine|reinterpret|build|distill|bring|use)\s+/i,
+    /^(draw|paint|sketch|create|imagine|capture|explore|interpret|reimagine|reinterpret|build|distill|bring|use|photograph|shoot)\s+/i,
     ''
   );
 
@@ -108,6 +108,7 @@ const MEDIUM_MODIFIERS: Record<string, string> = {
   'ink': 'high contrast detail',
   'pastel': 'soft pastel tones',
   'digital': 'vivid colorful',
+  'photography': 'professional composition',
 };
 
 // Keywords for mythological/fantasy/abstract subjects that stock photo sites can't handle.

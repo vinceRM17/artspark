@@ -12,13 +12,13 @@ export type CreativeTwist = {
 };
 
 // Mediums that support color
-export const COLOR_MEDIUMS = ['watercolor', 'gouache', 'acrylic', 'oil', 'pastel', 'digital', 'collage', 'mixed-media'];
+export const COLOR_MEDIUMS = ['watercolor', 'gouache', 'acrylic', 'oil', 'pastel', 'digital', 'collage', 'mixed-media', 'photography'];
 // Mediums that are inherently monochrome
 export const MONO_MEDIUMS = ['pencil', 'charcoal', 'ink'];
 // Wet mediums (longer setup/dry time)
 export const WET_MEDIUMS = ['watercolor', 'gouache', 'acrylic', 'oil'];
 // Dry mediums (quick to start)
-export const DRY_MEDIUMS = ['pencil', 'charcoal', 'ink', 'pastel', 'digital', 'collage', 'paper-art'];
+export const DRY_MEDIUMS = ['pencil', 'charcoal', 'ink', 'pastel', 'digital', 'collage', 'paper-art', 'photography'];
 
 export const CREATIVE_TWISTS: CreativeTwist[] = [
   // Universal twists — work with any medium
@@ -58,6 +58,10 @@ export const CREATIVE_TWISTS: CreativeTwist[] = [
   { text: "Use salt or alcohol for texture effects", compatibleWith: ['watercolor'] },
   { text: "Layer transparent washes — no opaque passages", compatibleWith: ['watercolor', 'ink'] },
   { text: "Smudge and blend with your fingers", compatibleWith: ['charcoal', 'pastel'] },
+
+  // Photography twists
+  { text: "Shoot from an unusual angle or perspective", compatibleWith: ['photography'] },
+  { text: "Use only natural light — no flash", compatibleWith: ['photography'] },
 ];
 
 /**

@@ -216,6 +216,20 @@ export const MEDIUM_INFO: Record<string, MediumInfo> = {
       { title: 'How to Create Mixed Media Art', url: 'https://www.wikihow.com/Create-Mixed-Media-Art' },
     ],
   },
+  photography: {
+    id: 'photography',
+    label: 'Photography',
+    description: 'Capturing subjects through a lens — composition, lighting, and timing create the art.',
+    materialsNeeded: [
+      'Camera (phone or DSLR)',
+      'Tripod (optional)',
+      'Editing app (Snapseed, Lightroom, etc.)',
+    ],
+    tutorialLinks: [
+      { title: 'Photography Basics for Beginners', url: 'https://www.youtube.com/watch?v=V7z7BAZdt2M' },
+      { title: 'How to Take Good Photos', url: 'https://www.wikihow.com/Take-Good-Photos' },
+    ],
+  },
 };
 
 /**
