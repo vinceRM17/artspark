@@ -26,12 +26,12 @@ export default function PrivacyPolicy() {
       body: 'If you enable daily reminders, we schedule local notifications on your device. We do not send marketing notifications or share your notification preferences.',
     },
     {
-      title: 'Analytics',
-      body: 'We may collect anonymous usage data (e.g., which features are used most) to improve the app. This data cannot be used to identify you personally.',
+      title: 'Analytics & Crash Reporting',
+      body: 'We collect anonymous usage data (e.g., which features are used most) to improve the app. This data cannot be used to identify you personally. We use Sentry for crash reporting in production builds to identify and fix bugs. Crash reports may include device type, OS version, and error details, but do not include your artwork or personal content.',
     },
     {
       title: 'Third-Party Services',
-      body: 'ArtSpark uses Supabase for secure data storage and authentication. Reference photos shown in the app come from Pexels, Unsplash, or Wikimedia Commons and are subject to their respective licenses.',
+      body: 'ArtSpark uses Supabase for secure data storage and authentication, and Sentry for crash reporting. Reference photos shown in the app come from Pexels, Unsplash, or Wikimedia Commons and are subject to their respective licenses.',
     },
     {
       title: 'Data Deletion',

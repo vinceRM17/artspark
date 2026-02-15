@@ -49,6 +49,13 @@
           "project": "artspark-mobile"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "05a61b00-d0c0-4a44-835f-ee2c4c4b8228"
+      }
+    },
+    "owner": "vincerm"
   }
 }
