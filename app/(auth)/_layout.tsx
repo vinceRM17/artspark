@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Redirect, Stack, usePathname } from 'expo-router';
-import * as Sentry from '@sentry/react-native';
+import * as Sentry from '@/lib/services/sentry';
 import { useSession } from '@/components/auth/SessionProvider';
 import { useOnboardingStatus } from '@/lib/hooks/useOnboardingStatus';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
@@ -59,18 +59,8 @@ export default function AuthLayout() {
     <ErrorBoundary>
     <Stack>
       <Stack.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          headerShown: true,
-        }}
+        name="(tabs)"
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="history"
@@ -90,20 +80,6 @@ export default function AuthLayout() {
         name="respond"
         options={{
           title: 'My Portfolio',
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
-        name="gallery"
-        options={{
-          title: 'My Gallery',
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
-        name="challenges"
-        options={{
-          title: 'Challenges',
           headerShown: true,
         }}
       />

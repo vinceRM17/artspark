@@ -666,116 +666,30 @@ export default function Home() {
             </Animated.View>
           )}
 
+          {/* ── Free tier upgrade prompt ── */}
+          {userTier === 'free' && freePromptUsed && !__DEV__ && (
+            <View style={{ backgroundColor: colors.inputBg, borderRadius: 14, paddingVertical: 14, marginBottom: 12, opacity: 0.6 }}>
+              <Text style={{ color: colors.textMuted, textAlign: 'center', fontSize: 15, fontWeight: '600' }}>
+                Upgrade for more prompts
+              </Text>
+            </View>
+          )}
+
           {/* ── Divider ── */}
           <View style={{ alignItems: 'center', marginVertical: 8 }}>
             <VineDivider width={180} opacity={0.12} />
           </View>
 
-          {/* ── Navigation buttons ── */}
-          <Animated.View entering={FadeInDown.duration(500).delay(450)} style={{ marginTop: 8 }}>
-            {/* Free tier locked generate */}
-            {userTier === 'free' && freePromptUsed && !__DEV__ && (
-              <View style={{ backgroundColor: colors.inputBg, borderRadius: 14, paddingVertical: 14, marginBottom: 10, opacity: 0.6 }}>
-                <Text style={{ color: colors.textMuted, textAlign: 'center', fontSize: 15, fontWeight: '600' }}>
-                  Upgrade for more prompts
-                </Text>
-              </View>
-            )}
-
-            {/* Quick actions row */}
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  backgroundColor: colors.surface,
-                  borderRadius: 14,
-                  paddingVertical: 18,
-                  alignItems: 'center',
-                  shadowColor: '#000',
-                  shadowOpacity: 0.04,
-                  shadowRadius: 8,
-                  shadowOffset: { width: 0, height: 2 },
-                  elevation: 1,
-                }}
-                onPress={() => router.push('/(auth)/gallery')}
-                activeOpacity={0.7}
-              >
-                <Text style={{ fontSize: 22, marginBottom: 4 }}>{'\uD83D\uDDBC\uFE0F'}</Text>
-                <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>Gallery</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  backgroundColor: colors.surface,
-                  borderRadius: 14,
-                  paddingVertical: 18,
-                  alignItems: 'center',
-                  shadowColor: '#000',
-                  shadowOpacity: 0.04,
-                  shadowRadius: 8,
-                  shadowOffset: { width: 0, height: 2 },
-                  elevation: 1,
-                }}
-                onPress={() => router.push('/(auth)/bookmarks')}
-                activeOpacity={0.7}
-              >
-                <Text style={{ fontSize: 22, marginBottom: 4 }}>{'\uD83D\uDD16'}</Text>
-                <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>Saved</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  backgroundColor: colors.surface,
-                  borderRadius: 14,
-                  paddingVertical: 18,
-                  alignItems: 'center',
-                  shadowColor: '#000',
-                  shadowOpacity: 0.04,
-                  shadowRadius: 8,
-                  shadowOffset: { width: 0, height: 2 },
-                  elevation: 1,
-                }}
-                onPress={() => router.push('/(auth)/challenges')}
-                activeOpacity={0.7}
-              >
-                <Text style={{ fontSize: 22, marginBottom: 4 }}>{'\u26A1'}</Text>
-                <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>Challenges</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  backgroundColor: colors.surface,
-                  borderRadius: 14,
-                  paddingVertical: 18,
-                  alignItems: 'center',
-                  shadowColor: '#000',
-                  shadowOpacity: 0.04,
-                  shadowRadius: 8,
-                  shadowOffset: { width: 0, height: 2 },
-                  elevation: 1,
-                }}
-                onPress={() => router.push('/(auth)/history')}
-                activeOpacity={0.7}
-              >
-                <Text style={{ fontSize: 22, marginBottom: 4 }}>{'\uD83D\uDCDC'}</Text>
-                <Text style={{ color: colors.text, fontSize: 13, fontWeight: '600' }}>History</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Settings */}
-            <TouchableOpacity
-              style={{ marginTop: 16, alignItems: 'center', paddingVertical: 8 }}
-              onPress={() => router.push('/(auth)/settings')}
-              activeOpacity={0.6}
-            >
-              <Text style={{ color: colors.textMuted, fontSize: 14 }}>
-                Settings
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
+          {/* ── View Prompt History link ── */}
+          <TouchableOpacity
+            onPress={() => router.push('/(auth)/history')}
+            activeOpacity={0.7}
+            style={{ alignItems: 'center', paddingVertical: 12 }}
+          >
+            <Text style={{ color: colors.primary, fontSize: 14, fontWeight: '600' }}>
+              View Prompt History {'\u203A'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
