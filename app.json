@@ -38,6 +38,9 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
+    "experiments": {
+      "baseUrl": "/artspark"
+    },
     "plugins": [
       "expo-router",
       "expo-secure-store",
