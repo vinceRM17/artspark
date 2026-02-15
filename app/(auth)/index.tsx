@@ -137,7 +137,7 @@ export default function Home() {
   const handleLoadImages = () => {
     if (!prompt || imagesLoading) return;
     setImagesLoading(true);
-    fetchReferenceImages(prompt.subject, prompt.medium, 3)
+    fetchReferenceImages(prompt.subject, prompt.medium, 3, prompt.prompt_text)
       .then((imgs) => {
         setReferenceImages(imgs);
         track('reference_images_loaded', { count: imgs.length, medium: prompt.medium });

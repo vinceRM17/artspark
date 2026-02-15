@@ -48,7 +48,7 @@ function markSeen(id: string, url: string) {
   seenImageUrls.add(url);
 }
 
-// Search queries optimized for art reference (clean, specific, art-relevant terms)
+// Fallback search queries when no prompt text is available
 const SUBJECT_QUERIES: Record<string, string[]> = {
   'animals': ['wildlife photography nature', 'domestic animal pet photo', 'bird nature close up'],
   'landscapes': ['scenic mountain landscape photo', 'countryside nature scenery', 'ocean coast sunset photo'],
@@ -63,6 +63,40 @@ const SUBJECT_QUERIES: Record<string, string[]> = {
   'patterns': ['natural pattern close up', 'geometric tile pattern', 'leaf vein texture macro'],
   'mythology': ['classical marble sculpture', 'ancient greek statue', 'renaissance artwork detail'],
 };
+
+/**
+ * Extract the core subject description from prompt text for image search.
+ * Strips action verbs, medium references, tips, twists, and style modifiers
+ * to get the specific subject (e.g., "a nautilus shell" from the full prompt).
+ */
+function extractSearchQuery(promptText: string): string {
+  // Take only the first sentence (before twist/tip/color rule)
+  let query = promptText.split(/[.!]\s/)[0];
+
+  // Strip leading action verbs + prepositions: "Paint a cat" → "a cat"
+  query = query.replace(
+    /^(draw|paint|sketch|create|imagine|capture|explore|interpret|reimagine|reinterpret|build|distill|bring|use)\b[^,—]*?\b(using|with|in|to|of)\s+/i,
+    ''
+  );
+
+  // Remove medium references (e.g., "oil paint", "watercolor", "pencil")
+  query = query.replace(
+    /\b(oil paint|watercolor|gouache|acrylic|pencil|charcoal|ink|pastel|digital|collage|mixed media|paper art)\b/gi,
+    ''
+  );
+
+  // Remove trailing instructions after em-dash or "—"
+  query = query.replace(/\s*[—–-]\s*.+$/, '');
+
+  // Clean up leftover artifacts
+  query = query
+    .replace(/\busing\b|\bwith\b|\bin\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^[\s,—–-]+|[\s,—–-]+$/g, '')
+    .trim();
+
+  return query;
+}
 
 // Medium-specific query modifiers for more relevant results
 const MEDIUM_MODIFIERS: Record<string, string> = {
@@ -82,12 +116,19 @@ const MEDIUM_MODIFIERS: Record<string, string> = {
 async function fetchFromPexels(
   subject: string,
   medium: string,
-  count: number
+  count: number,
+  promptText?: string
 ): Promise<ReferenceImage[]> {
   if (!PEXELS_API_KEY) return [];
 
-  const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
-  let query = queries[Math.floor(Math.random() * queries.length)];
+  // Use prompt-derived query when available, fall back to generic category queries
+  let query: string;
+  if (promptText) {
+    query = extractSearchQuery(promptText);
+  } else {
+    const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
+    query = queries[Math.floor(Math.random() * queries.length)];
+  }
   const modifier = MEDIUM_MODIFIERS[medium];
   if (modifier) query += ' ' + modifier;
   const page = Math.floor(Math.random() * 3) + 1;
@@ -130,12 +171,18 @@ async function fetchFromPexels(
 async function fetchFromUnsplash(
   subject: string,
   medium: string,
-  count: number
+  count: number,
+  promptText?: string
 ): Promise<ReferenceImage[]> {
   if (!UNSPLASH_ACCESS_KEY) return [];
 
-  const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
-  let query = queries[Math.floor(Math.random() * queries.length)];
+  let query: string;
+  if (promptText) {
+    query = extractSearchQuery(promptText);
+  } else {
+    const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
+    query = queries[Math.floor(Math.random() * queries.length)];
+  }
   const modifier = MEDIUM_MODIFIERS[medium];
   if (modifier) query += ' ' + modifier;
 
@@ -175,10 +222,16 @@ async function fetchFromUnsplash(
 async function fetchFromWikimediaCommons(
   subject: string,
   medium: string,
-  count: number
+  count: number,
+  promptText?: string
 ): Promise<ReferenceImage[]> {
-  const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
-  const query = queries[Math.floor(Math.random() * queries.length)] + ' photo';
+  let query: string;
+  if (promptText) {
+    query = extractSearchQuery(promptText) + ' photo';
+  } else {
+    const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
+    query = queries[Math.floor(Math.random() * queries.length)] + ' photo';
+  }
   const offset = Math.floor(Math.random() * 20);
   const fetchCount = count + seenImageIds.size + 6;
 
@@ -243,17 +296,21 @@ async function fetchFromWikimediaCommons(
  * Fetch reference photos for a prompt
  * Priority: Pexels -> Unsplash -> Wikimedia Commons
  * Deduplicates across calls within the same subject
+ *
+ * @param promptText - The full prompt sentence, used to extract a specific
+ *   search query (e.g., "a nautilus shell") instead of generic category terms
  */
 export async function fetchReferenceImages(
   subject: string,
   medium: string,
-  count: number = 3
+  count: number = 3,
+  promptText?: string
 ): Promise<ReferenceImage[]> {
   resetIfSubjectChanged(subject);
 
   // Try Pexels first (best relevance)
   try {
-    const results = await fetchFromPexels(subject, medium, count);
+    const results = await fetchFromPexels(subject, medium, count, promptText);
     if (results.length > 0) return results;
   } catch {
     // Fall through
@@ -262,7 +319,7 @@ export async function fetchReferenceImages(
   // Try Unsplash second
   if (UNSPLASH_ACCESS_KEY) {
     try {
-      const results = await fetchFromUnsplash(subject, medium, count);
+      const results = await fetchFromUnsplash(subject, medium, count, promptText);
       if (results.length > 0) return results;
     } catch {
       // Fall through
@@ -271,7 +328,7 @@ export async function fetchReferenceImages(
 
   // Fallback to Wikimedia Commons
   try {
-    return await fetchFromWikimediaCommons(subject, medium, count);
+    return await fetchFromWikimediaCommons(subject, medium, count, promptText);
   } catch {
     return [];
   }
