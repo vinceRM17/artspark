@@ -66,34 +66,33 @@ const SUBJECT_QUERIES: Record<string, string[]> = {
 
 /**
  * Extract the core subject description from prompt text for image search.
- * Strips action verbs, medium references, tips, twists, and style modifiers
- * to get the specific subject (e.g., "a nautilus shell" from the full prompt).
+ *
+ * Templates follow the pattern: "Verb {subject} with/using {medium} ..."
+ * Strategy: strip the medium + its preposition first, then strip the verb.
+ *
+ * "Create a quiet park bench under a streetlamp with oil paint today"
+ *   → strip medium: "Create a quiet park bench under a streetlamp"
+ *   → strip verb:   "a quiet park bench under a streetlamp"
  */
 function extractSearchQuery(promptText: string): string {
-  // Take only the first sentence (before twist/tip/color rule)
+  // Take only the first sentence (before twist/tip/color/em-dash clauses)
   let query = promptText.split(/[.!]\s/)[0];
+  query = query.replace(/\s*[—–]\s*.+$/, '');
 
-  // Strip leading action verbs + prepositions: "Paint a cat" → "a cat"
+  // 1) Strip medium + its preposition ("with oil paint", "using watercolor", "in pencil")
   query = query.replace(
-    /^(draw|paint|sketch|create|imagine|capture|explore|interpret|reimagine|reinterpret|build|distill|bring|use)\b[^,—]*?\b(using|with|in|to|of)\s+/i,
+    /\s+(using|with|in)\s+(oil paint|watercolor|gouache|acrylic|pencil|charcoal|ink|pastel|digital|collage|mixed media|paper art)\b.*/gi,
     ''
   );
 
-  // Remove medium references (e.g., "oil paint", "watercolor", "pencil")
+  // 2) Strip leading action verb: "Create a park bench" → "a park bench"
   query = query.replace(
-    /\b(oil paint|watercolor|gouache|acrylic|pencil|charcoal|ink|pastel|digital|collage|mixed media|paper art)\b/gi,
+    /^(draw|paint|sketch|create|imagine|capture|explore|interpret|reimagine|reinterpret|build|distill|bring|use)\s+/i,
     ''
   );
 
-  // Remove trailing instructions after em-dash or "—"
-  query = query.replace(/\s*[—–-]\s*.+$/, '');
-
-  // Clean up leftover artifacts
-  query = query
-    .replace(/\busing\b|\bwith\b|\bin\b/gi, '')
-    .replace(/\s{2,}/g, ' ')
-    .replace(/^[\s,—–-]+|[\s,—–-]+$/g, '')
-    .trim();
+  // 3) Clean up any remaining loose words
+  query = query.replace(/\s{2,}/g, ' ').trim();
 
   return query;
 }

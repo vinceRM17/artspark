@@ -37,12 +37,11 @@ function randomItem<T>(array: T[]): T {
  */
 const EXPLORER_TIPS = [
   "Tip: Start with light pencil guidelines before adding color.",
-  "Tip: Take a moment to observe your subject before making any marks.",
+  "Tip: Look up a reference photo first — all artists use them!",
   "Tip: Don't worry about perfection — focus on the process and enjoy it!",
   "Tip: Work from large shapes to small details.",
-  "Tip: Squint at your subject to see the big value patterns.",
+  "Tip: Squint at your reference to see the big value patterns.",
   "Tip: Take breaks and come back with fresh eyes.",
-  "Tip: Use a reference photo if you need one — all artists do!",
 ];
 
 /**

@@ -62,10 +62,10 @@ const TEMPLATES: PromptTemplate[] = [
   { template: "Create {subject} digitally — start with a rough sketch on one layer, then add color on a layer underneath", tier: 'guided', mediums: ['digital'] },
 
   // Universal guided
-  { template: "Create {subject} with {medium} today. Tip: look at your subject for a full minute before you start", tier: 'guided' },
-  { template: "Create {subject} with {medium}. Start with the biggest shapes first, then work your way to smaller details", tier: 'guided' },
+  { template: "Create {subject} with {medium} today — close your eyes and picture it for a moment before you begin", tier: 'guided' },
+  { template: "Create {subject} with {medium} — start with the biggest shapes first, then work your way to smaller details", tier: 'guided' },
   { template: "Create {subject} using {medium} — don't worry about making it perfect, just enjoy the process", tier: 'guided' },
-  { template: "Create {subject} with {medium}. Try squinting at what you see — it helps you notice where the light and dark areas are", tier: 'guided' },
+  { template: "Create {subject} with {medium} — use a reference photo to study the shapes before you start", tier: 'guided' },
 
   // Subject-specific guided
   { template: "Create {subject} with {medium} — notice where the light is coming from and make one side a little darker", tier: 'guided', subjects: ['animals', 'people-portraits', 'still-life', 'botanicals', 'food'] },
