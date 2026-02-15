@@ -87,7 +87,7 @@ export function getDifficultyOption(id: string): DifficultyOption {
   // Try legacy mapping
   const mapped = LEGACY_MAP[id];
   if (mapped) {
-    return DIFFICULTY_OPTIONS.find(d => d.id === mapped)!;
+    return DIFFICULTY_OPTIONS.find(d => d.id === mapped) || DIFFICULTY_OPTIONS[2];
   }
 
   // Default to developing

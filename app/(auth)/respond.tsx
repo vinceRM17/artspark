@@ -113,7 +113,12 @@ export default function Respond() {
       <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
         <View style={{ paddingHorizontal: 24, paddingTop: 48, paddingBottom: 32 }}>
           {/* Header */}
-          <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 16 }}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{ marginBottom: 16 }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
             <Text style={{ color: colors.primary, fontSize: 16 }}>{'\u2190'} Back</Text>
           </TouchableOpacity>
 
@@ -188,6 +193,8 @@ export default function Respond() {
               <TouchableOpacity
                 onPress={pickFromLibrary}
                 style={{ flex: 1, backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 12 }}
+                accessibilityRole="button"
+                accessibilityLabel="Choose photo from library"
               >
                 <Text style={{ color: colors.primary, textAlign: 'center', fontWeight: '600' }}>
                   Choose from Library
@@ -196,6 +203,8 @@ export default function Respond() {
               <TouchableOpacity
                 onPress={pickFromCamera}
                 style={{ flex: 1, backgroundColor: colors.surface, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, paddingVertical: 12 }}
+                accessibilityRole="button"
+                accessibilityLabel="Take photo with camera"
               >
                 <Text style={{ color: colors.primary, textAlign: 'center', fontWeight: '600' }}>
                   Take Photo

@@ -757,6 +757,11 @@ export default function Settings() {
           description={session?.user?.email || 'Not signed in'}
         />
         <SettingRow
+          label="Privacy Policy"
+          onPress={() => router.push('/(auth)/privacy')}
+          rightElement={<Text className="text-gray-400 text-sm">View</Text>}
+        />
+        <SettingRow
           label="Log Out"
           onPress={handleLogout}
           rightElement={<Text className="text-red-500 font-medium">Log Out</Text>}
@@ -772,7 +777,7 @@ export default function Settings() {
       {/* Footer */}
       <View className="px-6 py-8">
         <Text className="text-xs text-gray-400 text-center">
-          ArtSpark v1.1.0
+          ArtSpark v1.1.0 — Ignite your passion for creation
         </Text>
       </View>
     </ScrollView>

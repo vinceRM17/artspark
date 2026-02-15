@@ -124,6 +124,13 @@ export default function AuthLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="privacy"
+        options={{
+          title: 'Privacy Policy',
+          headerShown: true,
+        }}
+      />
     </Stack>
     </ErrorBoundary>
   );

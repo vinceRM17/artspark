@@ -70,12 +70,17 @@ export default function SignIn() {
         keyboardType="email-address"
         autoCorrect={false}
         editable={!isLoading}
+        accessibilityLabel="Email address"
+        accessibilityHint="Enter your email to receive a login code"
       />
 
       <TouchableOpacity
         className="bg-[#7C9A72] rounded-xl py-3 mb-4"
         onPress={handleSignIn}
         disabled={isLoading}
+        accessibilityRole="button"
+        accessibilityLabel="Send login code"
+        accessibilityState={{ disabled: isLoading }}
       >
         {isLoading ? (
           <ActivityIndicator color="white" />
