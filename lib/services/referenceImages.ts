@@ -124,14 +124,25 @@ function extractSearchQuery(promptText: string): string {
   return query;
 }
 
+// Common adjectives/adverbs that don't help identify a concrete subject
+const VAGUE_WORDS = new Set([
+  'deep', 'soft', 'hard', 'big', 'small', 'cold', 'warm', 'hot', 'cool',
+  'dark', 'light', 'bright', 'dim', 'fast', 'slow', 'old', 'new', 'late',
+  'early', 'long', 'short', 'high', 'low', 'thick', 'thin', 'heavy',
+  'rough', 'smooth', 'wet', 'dry', 'sharp', 'dull', 'loud', 'still',
+  'single', 'double', 'half', 'full', 'wide', 'narrow', 'flat',
+  'overlapping', 'shapes', 'colors', 'colour', 'colour',
+]);
+
 /**
  * Check if a search query has enough concrete/visual words to produce
  * meaningful results, or if it's too abstract after stripping metaphors.
  */
 function isQueryTooAbstract(query: string): boolean {
   const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-  // If 2 or fewer meaningful words remain, the query is probably too vague
-  return words.length <= 1;
+  // Count words that are concrete enough to identify a visual subject
+  const concreteWords = words.filter(w => !VAGUE_WORDS.has(w));
+  return concreteWords.length <= 1;
 }
 
 // Medium-specific query modifiers for more relevant results
@@ -279,8 +290,9 @@ async function fetchFromPexels(
     if (isDuplicate(id, url)) continue;
 
     // Filter out irrelevant results by checking alt text against query
+    // Skip photos with no alt text — can't verify relevance
     const alt = photo.alt || '';
-    if (alt && !isRelevantResult(alt, query)) continue;
+    if (!alt || !isRelevantResult(alt, query)) continue;
 
     results.push({
       id,
@@ -345,8 +357,9 @@ async function fetchFromUnsplash(
     if (isDuplicate(photo.id, url)) continue;
 
     // Filter out irrelevant results by checking alt text against query
+    // Skip photos with no alt text — can't verify relevance
     const alt = photo.alt_description || '';
-    if (alt && !isRelevantResult(alt, query)) continue;
+    if (!alt || !isRelevantResult(alt, query)) continue;
 
     results.push({
       id: photo.id,
