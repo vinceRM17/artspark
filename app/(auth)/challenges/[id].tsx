@@ -5,7 +5,7 @@
  * and a "Complete Today" action button.
  */
 
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -35,6 +35,28 @@ export default function ChallengeDetailScreen() {
   const progress = activeChallenge?.progress;
   const currentDay = activeChallenge?.currentDay || 1;
 
+  const isEnrolled = !!progress;
+  const progressPct = progress
+    ? (progress.days_completed / (challenge?.duration || 1)) * 100
+    : 0;
+
+  // Hooks MUST be called unconditionally (before any early returns)
+  const progressWidth = useSharedValue(0);
+
+  useEffect(() => {
+    if (isEnrolled) {
+      progressWidth.value = withDelay(
+        300,
+        withTiming(Math.max(progressPct, 2), { duration: 800 })
+      );
+    }
+  }, [progressPct, isEnrolled]);
+
+  const progressBarStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
+  }));
+
+  // Early returns AFTER all hooks
   if (!challenge) {
     return (
       <View className="flex-1 bg-[#FFF8F0] justify-center items-center px-6">
@@ -56,27 +78,6 @@ export default function ChallengeDetailScreen() {
       </View>
     );
   }
-
-  const isEnrolled = !!progress;
-  const progressPct = progress
-    ? (progress.days_completed / challenge.duration) * 100
-    : 0;
-
-  // Animated progress bar
-  const progressWidth = useSharedValue(0);
-
-  useEffect(() => {
-    if (isEnrolled) {
-      progressWidth.value = withDelay(
-        300,
-        withTiming(Math.max(progressPct, 2), { duration: 800 })
-      );
-    }
-  }, [progressPct, isEnrolled]);
-
-  const progressBarStyle = useAnimatedStyle(() => ({
-    width: `${progressWidth.value}%`,
-  }));
 
   const handleJoin = async () => {
     try {
@@ -116,7 +117,6 @@ export default function ChallengeDetailScreen() {
 
   const handleCompleteToday = () => {
     hapticMedium();
-    // Navigate to respond flow — the response screen can call completeChallengeDay
     router.push({
       pathname: '/(auth)/respond',
       params: {

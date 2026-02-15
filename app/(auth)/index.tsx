@@ -118,14 +118,21 @@ export default function Home() {
 
   useEffect(() => {
     if (prompt) {
-      setImagesLoading(true);
       setLiked(null);
-      fetchReferenceImages(prompt.subject, prompt.medium, 3)
-        .then(setReferenceImages)
-        .catch(() => setReferenceImages([]))
-        .finally(() => setImagesLoading(false));
+      // Reset images when prompt changes — user must request them
+      setReferenceImages([]);
+      setImagesLoading(false);
     }
   }, [prompt?.id]);
+
+  const handleLoadImages = () => {
+    if (!prompt || imagesLoading) return;
+    setImagesLoading(true);
+    fetchReferenceImages(prompt.subject, prompt.medium, 3)
+      .then(setReferenceImages)
+      .catch(() => setReferenceImages([]))
+      .finally(() => setImagesLoading(false));
+  };
 
   const handleThumbsUp = () => { hapticLight(); setLiked(true); };
   const handleThumbsDown = () => { if (!prompt) return; hapticLight(); setFeedbackVisible(true); };
@@ -427,17 +434,40 @@ export default function Home() {
             </View>
           </Animated.View>
 
-          {/* ── Reference Images ── */}
-          {(referenceImages.length > 0 || imagesLoading) && (
-            <Animated.View entering={FadeInDown.duration(500).delay(250)} style={{ marginBottom: 20 }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-                Reference Inspiration
-              </Text>
-              {imagesLoading ? (
-                <View style={{ height: 100, justifyContent: 'center', alignItems: 'center' }}>
-                  <ActivityIndicator size="small" color={colors.primary} />
-                </View>
-              ) : (
+          {/* ── Reference Images (on demand) ── */}
+          <Animated.View entering={FadeInDown.duration(500).delay(250)} style={{ marginBottom: 20 }}>
+            {referenceImages.length === 0 && !imagesLoading ? (
+              <TouchableOpacity
+                onPress={handleLoadImages}
+                activeOpacity={0.7}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: colors.surface,
+                  borderRadius: 12,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Show visual inspiration"
+              >
+                <Text style={{ fontSize: 16, marginRight: 8 }}>{'\uD83D\uDDBC\uFE0F'}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textMuted }}>
+                  Show Visual Ideas
+                </Text>
+              </TouchableOpacity>
+            ) : imagesLoading ? (
+              <View style={{ height: 80, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 8 }}>Finding inspiration...</Text>
+              </View>
+            ) : (
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+                  Visual Inspiration
+                </Text>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   {referenceImages.map((img) => {
                     const imgWidth = (screenWidth - 40 - 8 * (referenceImages.length - 1)) / referenceImages.length;
@@ -464,9 +494,9 @@ export default function Home() {
                     );
                   })}
                 </View>
-              )}
-            </Animated.View>
-          )}
+              </View>
+            )}
+          </Animated.View>
 
           {/* ── Learning Resources (Explorer level only) ── */}
           {tutorials.length > 0 && (

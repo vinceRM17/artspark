@@ -4,9 +4,11 @@
  * Manages daily prompt state with AsyncStorage caching and on-demand generation.
  * In dev mode, reads onboarding preferences from AsyncStorage and generates
  * preference-aware mock prompts locally with skill-aligned templates.
+ *
+ * Tracks recent selections to avoid repetitive medium/subject/template combos.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getTodayPrompt, createManualPrompt } from '@/lib/services/prompts';
 import { Prompt } from '@/lib/schemas/prompts';
@@ -91,20 +93,47 @@ async function loadDevPreferences(): Promise<DevPreferences> {
   return DEFAULT_DEV_PREFS;
 }
 
+/**
+ * Pick a random item from an array, avoiding recently used items.
+ * Falls back to any item if all have been used recently.
+ */
+function pickAvoiding<T>(arr: T[], recent: T[], maxRecent: number = 3): T {
+  // Filter out recently used
+  const fresh = arr.filter(item => !recent.includes(item));
+  if (fresh.length > 0) {
+    return fresh[Math.floor(Math.random() * fresh.length)];
+  }
+  // All used recently — pick random from full list
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function randomItem<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+/** Recent history to avoid repetition across manual prompt generation */
+type RecentHistory = {
+  mediums: string[];
+  subjects: string[];
+  promptTexts: string[];
+};
+
 /**
  * Generate a preference-aware mock prompt for dev mode
- * Now uses skill-aligned template tiers
+ * Uses history to avoid back-to-back repeats of medium, subject, and template
  */
-function generateDevPrompt(prefs: DevPreferences, source: 'daily' | 'manual'): Prompt {
-  const medium = randomItem(prefs.mediums);
+function generateDevPrompt(
+  prefs: DevPreferences,
+  source: 'daily' | 'manual',
+  history: RecentHistory
+): Prompt {
+  // Pick medium avoiding recent ones
+  const medium = pickAvoiding(prefs.mediums, history.mediums);
 
-  // Filter subjects by exclusions
+  // Filter subjects by exclusions, then pick avoiding recent
   const eligible = prefs.subjects.filter(s => !prefs.exclusions.includes(s));
-  const subject = randomItem(eligible.length > 0 ? eligible : prefs.subjects);
+  const subjectPool = eligible.length > 0 ? eligible : prefs.subjects;
+  const subject = pickAvoiding(subjectPool, history.subjects);
 
   // Get difficulty settings with new fields
   const difficulty = getDifficultyOption(prefs.difficulty);
@@ -120,8 +149,13 @@ function generateDevPrompt(prefs: DevPreferences, source: 'daily' | 'manual'): P
     ? randomItem(compatibleTwists).text
     : null;
 
-  // Build artistically meaningful prompt text using skill-aligned templates
+  // Generate prompt text, retrying if we get a repeat
   let promptText = getPromptTemplate(medium, subject, difficulty.templateTier);
+  let attempts = 0;
+  while (history.promptTexts.includes(promptText) && attempts < 5) {
+    promptText = getPromptTemplate(medium, subject, difficulty.templateTier);
+    attempts++;
+  }
 
   if (color_rule) {
     const colorLabel = COLOR_PALETTE_OPTIONS.find(c => c.id === color_rule)?.label || color_rule;
@@ -168,8 +202,23 @@ export function useDailyPrompt(): {
   const [generating, setGenerating] = useState(false);
   const [devPrefs, setDevPrefs] = useState<DevPreferences | null>(null);
 
+  // Track recent selections to prevent repetition
+  const historyRef = useRef<RecentHistory>({
+    mediums: [],
+    subjects: [],
+    promptTexts: [],
+  });
+
   const { session } = useSession();
   const userId = session?.user?.id;
+
+  /** Record a prompt in the recent history ring buffer */
+  function recordHistory(p: Prompt) {
+    const h = historyRef.current;
+    h.mediums = [p.medium, ...h.mediums].slice(0, 4);
+    h.subjects = [p.subject, ...h.subjects].slice(0, 4);
+    h.promptTexts = [p.prompt_text, ...h.promptTexts].slice(0, 6);
+  }
 
   // Load dev preferences on mount
   useEffect(() => {
@@ -185,7 +234,9 @@ export function useDailyPrompt(): {
       if (!userId && __DEV__) {
         const prefs = await loadDevPreferences();
         setDevPrefs(prefs);
-        setPrompt(generateDevPrompt(prefs, 'daily'));
+        const p = generateDevPrompt(prefs, 'daily', historyRef.current);
+        recordHistory(p);
+        setPrompt(p);
         setLoading(false);
         return;
       }
@@ -205,6 +256,7 @@ export function useDailyPrompt(): {
         const cachedData = await AsyncStorage.getItem(cacheKey);
         if (cachedData) {
           const cachedPrompt = JSON.parse(cachedData) as Prompt;
+          recordHistory(cachedPrompt);
           setPrompt(cachedPrompt);
           setLoading(false);
           return;
@@ -212,6 +264,7 @@ export function useDailyPrompt(): {
 
         // No cache - fetch from service
         const fetchedPrompt = await getTodayPrompt(userId);
+        recordHistory(fetchedPrompt);
         setPrompt(fetchedPrompt);
 
         // Cache the result
@@ -233,7 +286,9 @@ export function useDailyPrompt(): {
     if (!userId && __DEV__) {
       setGenerating(true);
       const prefs = devPrefs || await loadDevPreferences();
-      setPrompt(generateDevPrompt(prefs, 'manual'));
+      const p = generateDevPrompt(prefs, 'manual', historyRef.current);
+      recordHistory(p);
+      setPrompt(p);
       setGenerating(false);
       return;
     }
@@ -245,6 +300,7 @@ export function useDailyPrompt(): {
 
     try {
       const manualPrompt = await createManualPrompt(userId);
+      recordHistory(manualPrompt);
       setPrompt(manualPrompt);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate prompt');

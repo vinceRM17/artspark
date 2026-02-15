@@ -48,20 +48,31 @@ function markSeen(id: string, url: string) {
   seenImageUrls.add(url);
 }
 
-// Search queries optimized for Pexels (clean, specific terms)
+// Search queries optimized for art reference (clean, specific, art-relevant terms)
 const SUBJECT_QUERIES: Record<string, string[]> = {
-  'animals': ['wildlife animal', 'pet portrait', 'bird nature'],
-  'landscapes': ['mountain landscape', 'countryside scenery', 'ocean coast'],
-  'people-portraits': ['portrait face', 'person candid', 'street portrait'],
-  'still-life': ['fruit arrangement', 'flowers vase', 'objects table'],
-  'abstract': ['texture macro', 'light abstract', 'water reflection'],
-  'urban': ['city street', 'architecture downtown', 'urban night'],
-  'botanicals': ['flower closeup', 'garden plant', 'wildflower field'],
-  'fantasy': ['foggy forest', 'dramatic clouds', 'ancient ruins'],
-  'food': ['fresh food', 'cooking ingredients', 'market produce'],
-  'architecture': ['building facade', 'interior design', 'bridge structure'],
-  'patterns': ['natural pattern', 'geometric pattern', 'textile fabric'],
-  'mythology': ['ancient statue', 'temple ruins', 'classical sculpture'],
+  'animals': ['wildlife photography nature', 'domestic animal pet photo', 'bird nature close up'],
+  'landscapes': ['scenic mountain landscape photo', 'countryside nature scenery', 'ocean coast sunset photo'],
+  'people-portraits': ['portrait photography face', 'natural light portrait photo', 'candid people photography'],
+  'still-life': ['still life fruit table', 'flowers vase arrangement', 'objects natural light table'],
+  'abstract': ['macro texture nature', 'light reflection water', 'colorful abstract close up'],
+  'urban': ['city street photography', 'urban architecture downtown', 'city skyline evening'],
+  'botanicals': ['flower close up macro', 'botanical garden plant', 'wildflower meadow nature'],
+  'fantasy': ['misty forest nature', 'dramatic sky clouds', 'enchanted woodland'],
+  'food': ['fresh fruit vegetables', 'artisan food photography', 'farmers market produce'],
+  'architecture': ['historic building facade', 'architectural detail', 'bridge structure engineering'],
+  'patterns': ['natural pattern close up', 'geometric tile pattern', 'leaf vein texture macro'],
+  'mythology': ['classical marble sculpture', 'ancient greek statue', 'renaissance artwork detail'],
+};
+
+// Medium-specific query modifiers for more relevant results
+const MEDIUM_MODIFIERS: Record<string, string> = {
+  'watercolor': 'soft light',
+  'oil': 'rich color',
+  'pencil': 'high contrast',
+  'charcoal': 'dramatic light shadow',
+  'ink': 'high contrast detail',
+  'pastel': 'soft pastel tones',
+  'digital': 'vivid colorful',
 };
 
 /**
@@ -70,13 +81,16 @@ const SUBJECT_QUERIES: Record<string, string[]> = {
  */
 async function fetchFromPexels(
   subject: string,
+  medium: string,
   count: number
 ): Promise<ReferenceImage[]> {
   if (!PEXELS_API_KEY) return [];
 
-  const queries = SUBJECT_QUERIES[subject] || [subject];
-  const query = queries[Math.floor(Math.random() * queries.length)];
-  const page = Math.floor(Math.random() * 3) + 1; // Random page for variety
+  const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
+  let query = queries[Math.floor(Math.random() * queries.length)];
+  const modifier = MEDIUM_MODIFIERS[medium];
+  if (modifier) query += ' ' + modifier;
+  const page = Math.floor(Math.random() * 3) + 1;
 
   const response = await fetch(
     `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count + 6}&page=${page}&orientation=landscape`,
@@ -115,12 +129,15 @@ async function fetchFromPexels(
  */
 async function fetchFromUnsplash(
   subject: string,
+  medium: string,
   count: number
 ): Promise<ReferenceImage[]> {
   if (!UNSPLASH_ACCESS_KEY) return [];
 
-  const queries = SUBJECT_QUERIES[subject] || [subject];
-  const query = queries[Math.floor(Math.random() * queries.length)];
+  const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
+  let query = queries[Math.floor(Math.random() * queries.length)];
+  const modifier = MEDIUM_MODIFIERS[medium];
+  if (modifier) query += ' ' + modifier;
 
   const response = await fetch(
     `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count + 4}&orientation=landscape&content_filter=high`,
@@ -157,10 +174,11 @@ async function fetchFromUnsplash(
  */
 async function fetchFromWikimediaCommons(
   subject: string,
+  medium: string,
   count: number
 ): Promise<ReferenceImage[]> {
-  const queries = SUBJECT_QUERIES[subject] || [subject + ' photograph'];
-  const query = queries[Math.floor(Math.random() * queries.length)] + ' photograph';
+  const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
+  const query = queries[Math.floor(Math.random() * queries.length)] + ' photo';
   const offset = Math.floor(Math.random() * 20);
   const fetchCount = count + seenImageIds.size + 6;
 
@@ -228,14 +246,14 @@ async function fetchFromWikimediaCommons(
  */
 export async function fetchReferenceImages(
   subject: string,
-  _medium: string,
+  medium: string,
   count: number = 3
 ): Promise<ReferenceImage[]> {
   resetIfSubjectChanged(subject);
 
   // Try Pexels first (best relevance)
   try {
-    const results = await fetchFromPexels(subject, count);
+    const results = await fetchFromPexels(subject, medium, count);
     if (results.length > 0) return results;
   } catch {
     // Fall through
@@ -244,7 +262,7 @@ export async function fetchReferenceImages(
   // Try Unsplash second
   if (UNSPLASH_ACCESS_KEY) {
     try {
-      const results = await fetchFromUnsplash(subject, count);
+      const results = await fetchFromUnsplash(subject, medium, count);
       if (results.length > 0) return results;
     } catch {
       // Fall through
@@ -253,7 +271,7 @@ export async function fetchReferenceImages(
 
   // Fallback to Wikimedia Commons
   try {
-    return await fetchFromWikimediaCommons(subject, count);
+    return await fetchFromWikimediaCommons(subject, medium, count);
   } catch {
     return [];
   }
