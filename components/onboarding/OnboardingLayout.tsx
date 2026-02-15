@@ -2,7 +2,8 @@ import { View, Text, TouchableOpacity, ScrollView, Dimensions } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ProgressIndicator from './ProgressIndicator';
 import FloatingLeaves from '@/components/botanical/FloatingLeaves';
-import LeafAccent from '@/components/botanical/LeafAccent';
+import LeafCorner from '@/components/botanical/LeafCorner';
+import VineDivider from '@/components/botanical/VineDivider';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -41,7 +42,25 @@ export default function OnboardingLayout({
   return (
     <SafeAreaView className="flex-1 bg-[#FFF8F0]">
       {/* Background botanical decoration */}
-      <FloatingLeaves width={screenWidth} height={screenHeight} opacity={0.04} />
+      <FloatingLeaves width={screenWidth} height={screenHeight} opacity={0.08} />
+
+      {/* Corner leaf decorations */}
+      <LeafCorner size={80} opacity={0.15} position="topRight" />
+      <LeafCorner size={80} opacity={0.15} position="bottomLeft" />
+
+      {/* Warm gradient header band */}
+      <View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 120,
+          backgroundColor: '#FFF2E0',
+          opacity: 0.5,
+        }}
+        pointerEvents="none"
+      />
 
       {/* Back button (shown on steps after the first) */}
       {onBack && (
@@ -59,15 +78,15 @@ export default function OnboardingLayout({
       {/* Progress indicator at top */}
       <ProgressIndicator currentStep={step} totalSteps={totalSteps} />
 
-      {/* Title and subtitle with leaf accent */}
-      <View className="px-6 mb-4">
-        <View className="flex-row items-start">
-          <View className="flex-1">
-            <Text className="text-2xl font-bold text-gray-900 mb-2">{title}</Text>
-            {subtitle && <Text className="text-base text-gray-500">{subtitle}</Text>}
-          </View>
-          <LeafAccent size={36} opacity={0.2} rotation={-20} style={{ marginTop: 4 }} />
-        </View>
+      {/* Title and subtitle */}
+      <View className="px-6 mb-2">
+        <Text className="text-2xl font-bold text-gray-900 mb-2">{title}</Text>
+        {subtitle && <Text className="text-base text-gray-500">{subtitle}</Text>}
+      </View>
+
+      {/* Botanical vine divider */}
+      <View className="mb-4">
+        <VineDivider width={screenWidth * 0.6} opacity={0.25} />
       </View>
 
       {/* Scrollable content area */}

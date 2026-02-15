@@ -24,16 +24,26 @@ type PromptTemplate = {
 const TEMPLATES: PromptTemplate[] = [
   // === KIDS TIER — fun, playful, simple ===
 
-  { template: "Draw {subject} using {medium} — make it as colorful as you want!", tier: 'kids' },
-  { template: "Can you draw {subject} with {medium}? Add your own fun details!", tier: 'kids' },
+  // Drawing mediums
+  { template: "Draw {subject} using {medium} — make it as colorful as you want!", tier: 'kids', mediums: ['pencil', 'charcoal', 'ink', 'pastel'] },
+  { template: "Can you draw {subject} with {medium}? Add your own fun details!", tier: 'kids', mediums: ['pencil', 'charcoal', 'ink', 'pastel'] },
+  { template: "Grab your {medium} and draw {subject} — be as creative as you like!", tier: 'kids', mediums: ['pencil', 'charcoal', 'ink', 'pastel'] },
+  { template: "Time to get creative! Draw {subject} with {medium} and add a fun background", tier: 'kids', mediums: ['pencil', 'charcoal', 'ink', 'pastel'] },
+  { template: "Draw {subject} using {medium} — what colors will you choose?", tier: 'kids', mediums: ['pencil', 'charcoal', 'ink', 'pastel'] },
+
+  // Painting mediums
+  { template: "Paint {subject} using {medium} — make it as colorful as you want!", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
+  { template: "Can you paint {subject} with {medium}? Add your own fun details!", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
+  { template: "Grab your {medium} and paint {subject} — be as creative as you like!", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
+  { template: "Time to get creative! Paint {subject} with {medium} and add a fun background", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
+  { template: "Paint {subject} using {medium} — what colors will you choose?", tier: 'kids', mediums: ['watercolor', 'oil', 'acrylic', 'gouache'] },
+
+  // Universal (verb-neutral — works for any medium)
   { template: "Use {medium} to create {subject} — there's no wrong way to do it!", tier: 'kids' },
-  { template: "Let's make art! Draw {subject} with {medium} and see what happens", tier: 'kids' },
+  { template: "Let's make art! Create {subject} with {medium} and see what happens", tier: 'kids' },
   { template: "Today's art adventure: create {subject} using {medium}!", tier: 'kids' },
-  { template: "Grab your {medium} and draw {subject} — be as creative as you like!", tier: 'kids' },
-  { template: "Time to get creative! Draw {subject} with {medium} and add a fun background", tier: 'kids' },
-  { template: "Draw {subject} using {medium} — what colors will you choose?", tier: 'kids' },
   { template: "Imagine {subject} and bring it to life with {medium}!", tier: 'kids' },
-  { template: "Use {medium} to draw {subject} — make it your own!", tier: 'kids' },
+  { template: "Use {medium} to create {subject} — make it your own!", tier: 'kids' },
 
   // === GUIDED TIER (Explorer) — encouraging, with simple tips ===
 
@@ -52,13 +62,13 @@ const TEMPLATES: PromptTemplate[] = [
   { template: "Create {subject} digitally — start with a rough sketch on one layer, then add color on a layer underneath", tier: 'guided', mediums: ['digital'] },
 
   // Universal guided
-  { template: "Create {subject} with {medium} today. Tip: look at your subject for a full minute before you start drawing", tier: 'guided' },
-  { template: "Draw {subject} with {medium}. Start with the biggest shapes first, then work your way to smaller details", tier: 'guided' },
+  { template: "Create {subject} with {medium} today. Tip: look at your subject for a full minute before you start", tier: 'guided' },
+  { template: "Create {subject} with {medium}. Start with the biggest shapes first, then work your way to smaller details", tier: 'guided' },
   { template: "Create {subject} using {medium} — don't worry about making it perfect, just enjoy the process", tier: 'guided' },
-  { template: "Draw {subject} with {medium}. Try squinting at what you see — it helps you notice where the light and dark areas are", tier: 'guided' },
+  { template: "Create {subject} with {medium}. Try squinting at what you see — it helps you notice where the light and dark areas are", tier: 'guided' },
 
   // Subject-specific guided
-  { template: "Draw {subject} with {medium} — notice where the light is coming from and make one side a little darker", tier: 'guided', subjects: ['animals', 'people-portraits', 'still-life', 'botanicals', 'food'] },
+  { template: "Create {subject} with {medium} — notice where the light is coming from and make one side a little darker", tier: 'guided', subjects: ['animals', 'people-portraits', 'still-life', 'botanicals', 'food'] },
   { template: "Create {subject} with {medium} — use your fingers to frame the scene and find the most interesting view before you start", tier: 'guided', subjects: ['landscapes', 'urban', 'architecture'] },
 
   // === STANDARD TIER (Developing/Confident) — clear direction, no jargon ===
@@ -98,10 +108,10 @@ const TEMPLATES: PromptTemplate[] = [
 
   // Universal standard
   { template: "Create {subject} with {medium} — focus on what catches your eye first", tier: 'standard' },
-  { template: "Draw {subject} with {medium} — take a moment to really look before you begin", tier: 'standard' },
+  { template: "Create {subject} with {medium} — take a moment to really look before you begin", tier: 'standard' },
   { template: "Interpret {subject} with {medium} — bring your own perspective to it", tier: 'standard' },
   { template: "Create {subject} with {medium}, trusting your instincts today", tier: 'standard' },
-  { template: "Paint {subject} with {medium} — what do you notice that others might miss?", tier: 'standard' },
+  { template: "Explore {subject} with {medium} — what do you notice that others might miss?", tier: 'standard' },
 
   // === OPEN TIER (Master) — concise, assumes skill ===
 

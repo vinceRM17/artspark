@@ -216,13 +216,22 @@ export default function Step6() {
     >
       <View className="flex-1 justify-center items-center px-6">
         {Platform.OS === 'ios' ? (
-          <DateTimePicker
-            value={selectedTime}
-            mode="time"
-            display="spinner"
-            onChange={onTimeChange}
-            style={{ width: '100%' }}
-          />
+          <View style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: 16,
+            padding: 8,
+            width: '100%',
+          }}>
+            <DateTimePicker
+              value={selectedTime}
+              mode="time"
+              display="spinner"
+              onChange={onTimeChange}
+              themeVariant="light"
+              textColor="#374151"
+              style={{ width: '100%' }}
+            />
+          </View>
         ) : (
           <View className="w-full">
             <Text className="text-lg text-gray-700 text-center mb-4">
