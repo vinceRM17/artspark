@@ -141,17 +141,7 @@ export default function Respond() {
   return (
     <>
       <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
-        <View style={{ paddingHorizontal: 24, paddingTop: 48, paddingBottom: 32 }}>
-          {/* Header */}
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{ marginBottom: 16 }}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={{ color: colors.primary, fontSize: 16 }}>{'\u2190'} Back</Text>
-          </TouchableOpacity>
-
+        <View style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32 }}>
           <Text style={{ fontSize: 24, fontWeight: '600', color: colors.text, marginBottom: 16 }}>Respond to Prompt</Text>
 
           {/* Prompt reminder */}

@@ -67,6 +67,7 @@ export default function AuthLayout() {
         options={{
           title: 'History',
           headerShown: true,
+          headerBackTitle: 'Home',
         }}
       />
       <Stack.Screen
@@ -74,6 +75,7 @@ export default function AuthLayout() {
         options={{
           title: 'Prompt Detail',
           headerShown: true,
+          headerBackTitle: 'History',
         }}
       />
       <Stack.Screen
@@ -81,6 +83,7 @@ export default function AuthLayout() {
         options={{
           title: 'My Portfolio',
           headerShown: true,
+          headerBackTitle: 'Home',
         }}
       />
       {/* Challenges shelved — revisit later */}
@@ -89,6 +92,7 @@ export default function AuthLayout() {
         options={{
           title: 'Achievements',
           headerShown: true,
+          headerBackTitle: 'Home',
         }}
       />
       <Stack.Screen
@@ -96,6 +100,7 @@ export default function AuthLayout() {
         options={{
           title: 'Saved Prompts',
           headerShown: true,
+          headerBackTitle: 'Home',
         }}
       />
       <Stack.Screen
@@ -103,6 +108,7 @@ export default function AuthLayout() {
         options={{
           title: 'Weekly Recap',
           headerShown: true,
+          headerBackTitle: 'Home',
         }}
       />
       <Stack.Screen
@@ -110,6 +116,7 @@ export default function AuthLayout() {
         options={{
           title: 'Prompt Packs',
           headerShown: true,
+          headerBackTitle: 'Home',
         }}
       />
       <Stack.Screen
@@ -117,6 +124,7 @@ export default function AuthLayout() {
         options={{
           title: 'Privacy Policy',
           headerShown: true,
+          headerBackTitle: 'Settings',
         }}
       />
     </Stack>
