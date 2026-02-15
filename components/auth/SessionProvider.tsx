@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
-import * as Sentry from '@sentry/react-native';
+import * as Sentry from '@/lib/services/sentry';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 

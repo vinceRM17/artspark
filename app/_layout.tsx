@@ -1,7 +1,7 @@
 import "../global.css";
 import { useState } from 'react';
 import { Slot } from 'expo-router';
-import * as Sentry from '@sentry/react-native';
+import * as Sentry from '@/lib/services/sentry';
 import { SessionProvider } from '@/components/auth/SessionProvider';
 import { ThemeProvider } from '@/lib/theme/ThemeContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
