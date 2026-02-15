@@ -24,111 +24,100 @@ type PromptTemplate = {
 const TEMPLATES: PromptTemplate[] = [
   // === KIDS TIER — fun, playful, simple ===
 
-  // Universal kids
-  { template: "Draw your favorite {subject} using {medium} — make it as colorful as you want!", tier: 'kids' },
-  { template: "Can you draw {subject} using {medium}? Add your own fun details!", tier: 'kids' },
+  { template: "Draw {subject} using {medium} — make it as colorful as you want!", tier: 'kids' },
+  { template: "Can you draw {subject} with {medium}? Add your own fun details!", tier: 'kids' },
   { template: "Use {medium} to create {subject} — there's no wrong way to do it!", tier: 'kids' },
   { template: "Let's make art! Draw {subject} with {medium} and see what happens", tier: 'kids' },
   { template: "Today's art adventure: create {subject} using {medium}!", tier: 'kids' },
   { template: "Grab your {medium} and draw {subject} — be as creative as you like!", tier: 'kids' },
-  { template: "Time to get creative! Make {subject} with {medium} and add a fun background", tier: 'kids' },
+  { template: "Time to get creative! Draw {subject} with {medium} and add a fun background", tier: 'kids' },
   { template: "Draw {subject} using {medium} — what colors will you choose?", tier: 'kids' },
+  { template: "Imagine {subject} and bring it to life with {medium}!", tier: 'kids' },
+  { template: "Use {medium} to draw {subject} — make it your own!", tier: 'kids' },
 
-  // Subject-specific kids
-  { template: "Draw your dream {subject} using {medium} — it can be silly or serious!", tier: 'kids', subjects: ['animals', 'fantasy', 'mythology'] },
-  { template: "Use {medium} to draw {subject} you might see outside your window", tier: 'kids', subjects: ['landscapes', 'urban', 'botanicals', 'architecture'] },
-  { template: "Draw {subject} using {medium} — what would you put on the table?", tier: 'kids', subjects: ['still-life', 'food'] },
-  { template: "Create a fun {subject} pattern with {medium} — repeat shapes and colors!", tier: 'kids', subjects: ['abstract', 'patterns'] },
-
-  // Medium-specific kids
-  { template: "Splash some {medium} on your paper and turn {subject} into something magical!", tier: 'kids', mediums: ['watercolor', 'gouache'] },
-  { template: "Use your {medium} to sketch {subject} — start with big shapes, then add details!", tier: 'kids', mediums: ['pencil', 'charcoal'] },
-  { template: "Get your {medium} ready and paint {subject} with your brightest colors!", tier: 'kids', mediums: ['acrylic', 'oil', 'gouache'] },
-  { template: "Create {subject} with {medium} on your screen — try out different brushes!", tier: 'kids', mediums: ['digital'] },
-
-  // === GUIDED TIER (Explorer) — step-by-step, encouraging ===
+  // === GUIDED TIER (Explorer) — encouraging, with simple tips ===
 
   // Watercolor guided
-  { template: "Start by lightly sketching {subject} in pencil, then layer {medium} washes from lightest to darkest — let each layer dry before adding the next", tier: 'guided', mediums: ['watercolor'] },
-  { template: "Begin with a simple {subject} outline, then practice {medium} wet-on-dry technique: paint a wash, let it dry, then add details on top", tier: 'guided', mediums: ['watercolor', 'gouache'] },
+  { template: "Sketch {subject} lightly in pencil first, then paint over it with {medium} — start with the lightest colors and build up", tier: 'guided', mediums: ['watercolor'] },
+  { template: "Paint {subject} with {medium} — try wetting the paper first for soft, dreamy edges", tier: 'guided', mediums: ['watercolor', 'gouache'] },
 
   // Drawing guided
-  { template: "Start by drawing the basic shapes of {subject} in {medium} using light pressure — circles, ovals, rectangles — then gradually refine the details", tier: 'guided', mediums: ['pencil', 'charcoal'] },
-  { template: "Practice drawing {subject} in {medium}: begin with a gesture sketch (30 seconds), then do a longer, more careful version (10 minutes)", tier: 'guided', mediums: ['pencil', 'charcoal', 'ink'] },
+  { template: "Draw {subject} with {medium} — start with simple shapes like circles and ovals, then add details on top", tier: 'guided', mediums: ['pencil', 'charcoal'] },
+  { template: "Try drawing {subject} with {medium}: do a quick 30-second version first, then a slower, more careful one", tier: 'guided', mediums: ['pencil', 'charcoal', 'ink'] },
 
   // Painting guided
-  { template: "Block in the main shapes of {subject} with large brushstrokes of {medium} first — don't worry about details until the whole canvas has color", tier: 'guided', mediums: ['acrylic', 'oil', 'gouache'] },
+  { template: "Paint {subject} with {medium} using big brushstrokes first — fill the whole canvas with color before adding any details", tier: 'guided', mediums: ['acrylic', 'oil', 'gouache'] },
 
   // Digital guided
-  { template: "Create {subject} digitally: start on one layer for your sketch, then add a new layer underneath for color blocking before refining", tier: 'guided', mediums: ['digital'] },
+  { template: "Create {subject} digitally — start with a rough sketch on one layer, then add color on a layer underneath", tier: 'guided', mediums: ['digital'] },
 
   // Universal guided
-  { template: "Study {subject} in {medium} — take a full minute to observe your subject before making any marks, noticing shapes and values", tier: 'guided' },
-  { template: "Create {subject} in {medium} today. Tip: start with the biggest shapes first, then work your way to smaller details", tier: 'guided' },
-  { template: "Warm up with quick thumbnail sketches of {subject}, then create a finished {medium} piece from your favorite composition", tier: 'guided' },
+  { template: "Create {subject} with {medium} today. Tip: look at your subject for a full minute before you start drawing", tier: 'guided' },
+  { template: "Draw {subject} with {medium}. Start with the biggest shapes first, then work your way to smaller details", tier: 'guided' },
+  { template: "Create {subject} using {medium} — don't worry about making it perfect, just enjoy the process", tier: 'guided' },
+  { template: "Draw {subject} with {medium}. Try squinting at what you see — it helps you notice where the light and dark areas are", tier: 'guided' },
 
   // Subject-specific guided
-  { template: "Draw {subject} in {medium}: start by identifying the light source, then shade the shadow side to give your work a 3D feeling", tier: 'guided', subjects: ['animals', 'people-portraits', 'still-life', 'botanicals', 'food'] },
-  { template: "Sketch {subject} in {medium}: use a viewfinder (your fingers in an L shape) to crop an interesting composition before you start", tier: 'guided', subjects: ['landscapes', 'urban', 'architecture'] },
+  { template: "Draw {subject} with {medium} — notice where the light is coming from and make one side a little darker", tier: 'guided', subjects: ['animals', 'people-portraits', 'still-life', 'botanicals', 'food'] },
+  { template: "Create {subject} with {medium} — use your fingers to frame the scene and find the most interesting view before you start", tier: 'guided', subjects: ['landscapes', 'urban', 'architecture'] },
 
-  // === STANDARD TIER (Developing/Confident) — balanced direction ===
+  // === STANDARD TIER (Developing/Confident) — clear direction, no jargon ===
 
-  // Watercolor-specific
-  { template: "Paint a {subject} study in {medium}, letting the water guide your washes", tier: 'standard', mediums: ['watercolor'] },
-  { template: "Create a loose {medium} {subject} sketch — capture the essence, not the details", tier: 'standard', mediums: ['watercolor', 'gouache'] },
-  { template: "Explore {subject} in {medium}, building from light to dark in transparent layers", tier: 'standard', mediums: ['watercolor'] },
+  // Watercolor
+  { template: "Paint {subject} with {medium}, letting the water move the paint in unexpected ways", tier: 'standard', mediums: ['watercolor'] },
+  { template: "Create {subject} with {medium} — keep it loose and focus on the feeling, not the details", tier: 'standard', mediums: ['watercolor', 'gouache'] },
+  { template: "Paint {subject} with {medium}, building up from light colors to dark", tier: 'standard', mediums: ['watercolor'] },
 
   // Pencil / Charcoal / Ink
-  { template: "Draw {subject} in {medium}, focusing on the interplay of light and shadow", tier: 'standard', mediums: ['pencil', 'charcoal', 'ink'] },
-  { template: "Create a {medium} study of {subject} using value alone to define form", tier: 'standard', mediums: ['pencil', 'charcoal'] },
-  { template: "Sketch {subject} in {medium} — aim for gesture and feeling over precision", tier: 'standard', mediums: ['pencil', 'charcoal', 'ink'] },
-  { template: "Render {subject} in {medium}, paying close attention to edges — where they're sharp, where they're lost", tier: 'standard', mediums: ['pencil', 'charcoal'] },
+  { template: "Draw {subject} with {medium}, focusing on the contrast between light and shadow", tier: 'standard', mediums: ['pencil', 'charcoal', 'ink'] },
+  { template: "Draw {subject} using only {medium} — see how much you can express with just light and dark", tier: 'standard', mediums: ['pencil', 'charcoal'] },
+  { template: "Sketch {subject} with {medium} — go for energy and feeling over perfection", tier: 'standard', mediums: ['pencil', 'charcoal', 'ink'] },
+  { template: "Draw {subject} with {medium}, paying attention to where the edges are sharp and where they fade away", tier: 'standard', mediums: ['pencil', 'charcoal'] },
 
   // Oil / Acrylic
-  { template: "Paint {subject} in {medium}, building up color with bold, confident strokes", tier: 'standard', mediums: ['oil', 'acrylic'] },
-  { template: "Create a {medium} {subject} piece, exploring how thick and thin paint create texture", tier: 'standard', mediums: ['oil', 'acrylic'] },
-  { template: "Paint {subject} in {medium} — block in large shapes first, then refine selectively", tier: 'standard', mediums: ['oil', 'acrylic', 'gouache'] },
+  { template: "Paint {subject} with {medium}, using bold and confident brushstrokes", tier: 'standard', mediums: ['oil', 'acrylic'] },
+  { template: "Create {subject} with {medium} — experiment with thick and thin layers of paint", tier: 'standard', mediums: ['oil', 'acrylic'] },
+  { template: "Paint {subject} with {medium} — start with big areas of color, then add detail where it matters most", tier: 'standard', mediums: ['oil', 'acrylic', 'gouache'] },
 
   // Digital
-  { template: "Create a {medium} {subject} piece exploring shape language and silhouette", tier: 'standard', mediums: ['digital'] },
-  { template: "Design {subject} digitally, using a limited brush set to unify the piece", tier: 'standard', mediums: ['digital'] },
+  { template: "Create {subject} digitally — focus on the overall shape and silhouette first", tier: 'standard', mediums: ['digital'] },
+  { template: "Create {subject} digitally, limiting yourself to just 3-4 brushes", tier: 'standard', mediums: ['digital'] },
 
   // Collage / Mixed Media
-  { template: "Compose {subject} in {medium}, combining found textures and materials", tier: 'standard', mediums: ['collage', 'mixed-media', 'paper-art'] },
-  { template: "Create a {medium} {subject} piece — let unexpected material combinations tell the story", tier: 'standard', mediums: ['collage', 'mixed-media'] },
+  { template: "Create {subject} with {medium}, combining different textures and materials", tier: 'standard', mediums: ['collage', 'mixed-media', 'paper-art'] },
+  { template: "Build {subject} with {medium} — let unexpected combinations surprise you", tier: 'standard', mediums: ['collage', 'mixed-media'] },
 
-  // Subject-specific (any medium)
-  { template: "Study {subject} in {medium} — observe how the form catches light from a single source", tier: 'standard', subjects: ['animals', 'people-portraits', 'still-life', 'botanicals', 'food'] },
-  { template: "Create a {medium} {subject} piece that captures atmosphere and depth", tier: 'standard', subjects: ['landscapes', 'urban', 'architecture'] },
-  { template: "Interpret {subject} in {medium}, emphasizing rhythm and visual flow", tier: 'standard', subjects: ['abstract', 'patterns'] },
-  { template: "Explore {subject} in {medium} — tell a story through composition and detail", tier: 'standard', subjects: ['mythology', 'fantasy'] },
-  { template: "Render {subject} in {medium}, focusing on the textures and surfaces you observe", tier: 'standard', subjects: ['still-life', 'food', 'botanicals'] },
-  { template: "Capture the character of {subject} in {medium} — what makes this subject unique?", tier: 'standard', subjects: ['animals', 'people-portraits'] },
-  { template: "Create a {medium} study of {subject} that plays with foreground and background relationships", tier: 'standard', subjects: ['landscapes', 'urban', 'architecture', 'botanicals'] },
-  { template: "Express {subject} in {medium} through shapes and gesture rather than literal detail", tier: 'standard', subjects: ['abstract', 'fantasy', 'mythology'] },
+  // Subject-specific
+  { template: "Create {subject} with {medium} — notice how the light falls and let that guide you", tier: 'standard', subjects: ['animals', 'people-portraits', 'still-life', 'botanicals', 'food'] },
+  { template: "Create {subject} with {medium} — try to capture the mood and atmosphere", tier: 'standard', subjects: ['landscapes', 'urban', 'architecture'] },
+  { template: "Interpret {subject} with {medium} — let the colors and shapes express the feeling", tier: 'standard', subjects: ['abstract', 'patterns'] },
+  { template: "Bring {subject} to life with {medium} — tell a story with your piece", tier: 'standard', subjects: ['mythology', 'fantasy'] },
+  { template: "Create {subject} with {medium} — focus on the textures and surfaces you see", tier: 'standard', subjects: ['still-life', 'food', 'botanicals'] },
+  { template: "Capture {subject} with {medium} — what makes this moment special?", tier: 'standard', subjects: ['animals', 'people-portraits'] },
+  { template: "Create {subject} with {medium} — play with what's close up and what's far away", tier: 'standard', subjects: ['landscapes', 'urban', 'architecture', 'botanicals'] },
 
   // Universal standard
-  { template: "Create a {medium} piece inspired by {subject} — focus on what draws your eye first", tier: 'standard' },
-  { template: "Study {subject} in {medium}, taking time to really observe before you begin", tier: 'standard' },
-  { template: "Interpret {subject} through {medium} — bring your own perspective to the subject", tier: 'standard' },
-  { template: "Explore {subject} in {medium}, paying attention to the shapes between objects", tier: 'standard' },
-  { template: "Create {subject} in {medium}, challenging yourself to work more intuitively today", tier: 'standard' },
+  { template: "Create {subject} with {medium} — focus on what catches your eye first", tier: 'standard' },
+  { template: "Draw {subject} with {medium} — take a moment to really look before you begin", tier: 'standard' },
+  { template: "Interpret {subject} with {medium} — bring your own perspective to it", tier: 'standard' },
+  { template: "Create {subject} with {medium}, trusting your instincts today", tier: 'standard' },
+  { template: "Paint {subject} with {medium} — what do you notice that others might miss?", tier: 'standard' },
 
-  // === OPEN TIER (Master) — minimal, assumes expertise ===
+  // === OPEN TIER (Master) — concise, assumes skill ===
 
-  { template: "Explore {subject} in {medium}", tier: 'open' },
   { template: "{subject}. {medium}. Your interpretation", tier: 'open' },
-  { template: "Deconstruct {subject} through {medium} — find the unexpected", tier: 'open' },
-  { template: "{medium} study: {subject}, emphasis on negative space", tier: 'open' },
-  { template: "Reinterpret {subject} in {medium} — subvert one convention", tier: 'open' },
-  { template: "{subject} in {medium}. Limit yourself to 30 minutes", tier: 'open' },
-  { template: "Investigate the tension between form and void: {subject}, {medium}", tier: 'open' },
+  { template: "Reimagine {subject} through {medium} — find what's unexpected", tier: 'open' },
+  { template: "Create {subject} with {medium} — focus on the spaces in between", tier: 'open' },
+  { template: "Reinterpret {subject} with {medium} — break one rule on purpose", tier: 'open' },
+  { template: "{subject} in {medium}. Give yourself just 30 minutes", tier: 'open' },
+  { template: "{subject} with {medium} — explore the tension between control and chance", tier: 'open' },
+  { template: "Distill {subject} to its essence using {medium}", tier: 'open' },
 
   // Medium-specific open
-  { template: "{subject} — push {medium} to its extremes of wet and dry", tier: 'open', mediums: ['watercolor', 'ink'] },
-  { template: "{subject} in {medium}: impasto vs. scumble", tier: 'open', mediums: ['oil', 'acrylic'] },
-  { template: "{subject}. {medium}. One continuous line", tier: 'open', mediums: ['pencil', 'ink', 'charcoal'] },
-  { template: "Layer, obscure, reveal: {subject} in {medium}", tier: 'open', mediums: ['collage', 'mixed-media'] },
+  { template: "{subject} — push your {medium} between very wet and very dry", tier: 'open', mediums: ['watercolor', 'ink'] },
+  { template: "{subject} with {medium} — contrast thick, heavy strokes with thin, delicate ones", tier: 'open', mediums: ['oil', 'acrylic'] },
+  { template: "{subject} with {medium}. One continuous line, no lifting", tier: 'open', mediums: ['pencil', 'ink', 'charcoal'] },
+  { template: "Layer, cover, and reveal: {subject} with {medium}", tier: 'open', mediums: ['collage', 'mixed-media'] },
 ];
 
 /**
@@ -325,10 +314,11 @@ export function getPromptTemplate(
     .replace('{medium}', mediumLabel)
     .replace('{subject}', subjectLabel);
 
-  // Fix a/an: "a ink" → "an ink", "a oil paint" → "an oil paint", etc.
-  text = text.replace(/\b(a) ([aeiou])/gi, (_match, article, vowel) => {
+  // Fix a/an: "a ink" → "an ink", "a oil paint" → "an oil paint"
+  // Only match "a" followed by a vowel-starting word of 2+ chars (avoids "a a" → "an a")
+  text = text.replace(/\b(a) ([aeiou]\w)/gi, (_match, article, rest) => {
     const an = article[0] === 'A' ? 'An' : 'an';
-    return `${an} ${vowel}`;
+    return `${an} ${rest}`;
   });
 
   return text;
