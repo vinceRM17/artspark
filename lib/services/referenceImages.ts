@@ -56,7 +56,7 @@ const SUBJECT_QUERIES: Record<string, string[]> = {
   'landscapes': ['scenic mountain landscape photo', 'countryside nature scenery', 'ocean coast sunset photo'],
   'people-portraits': ['portrait photography face', 'natural light portrait photo', 'candid people photography'],
   'still-life': ['still life fruit table', 'flowers vase arrangement', 'objects natural light table'],
-  'abstract': ['macro texture nature', 'light reflection water', 'colorful abstract close up'],
+  'abstract': ['abstract color mixing painting', 'warm cool colors art', 'colorful abstract texture close up'],
   'urban': ['city street photography', 'urban architecture downtown', 'city skyline evening'],
   'botanicals': ['flower close up macro', 'botanical garden plant', 'wildflower meadow nature'],
   'fantasy': ['misty forest nature', 'dramatic sky clouds', 'enchanted woodland'],
@@ -66,15 +66,35 @@ const SUBJECT_QUERIES: Record<string, string[]> = {
   'mythology': ['classical marble sculpture', 'ancient greek statue', 'renaissance artwork detail'],
 };
 
+// Art-metaphor words that are used figuratively in prompts but mislead photo searches.
+// "a conversation between warm and cool colors" → "conversation" returns people chatting.
+// These get stripped so only the concrete/visual words survive.
+const ART_METAPHOR_WORDS = new Set([
+  'conversation', 'tension', 'energy', 'feeling', 'rhythm', 'memory',
+  'essence', 'emotion', 'movement', 'harmony', 'discord', 'balance',
+  'chaos', 'order', 'interplay', 'dialogue', 'dance', 'whisper',
+  'echo', 'pulse', 'breath', 'moment', 'journey', 'story',
+  'narrative', 'quiet', 'silence', 'absence', 'presence', 'void',
+  'suggestion', 'impression', 'dissolving', 'emerging', 'reveal',
+  'conceal', 'interpret', 'interpretation', 'express', 'expression',
+  'between', 'suggest', 'that', 'today', 'your',
+]);
+
 /**
  * Extract the core subject description from prompt text for image search.
  *
  * Templates follow the pattern: "Verb {subject} with/using {medium} ..."
- * Strategy: strip the medium + its preposition first, then strip the verb.
+ * Strategy: strip the medium + its preposition first, then strip the verb,
+ * then strip art-metaphor words that mislead photo APIs.
  *
  * "Create a quiet park bench under a streetlamp with oil paint today"
  *   → strip medium: "Create a quiet park bench under a streetlamp"
  *   → strip verb:   "a quiet park bench under a streetlamp"
+ *
+ * "Interpret a conversation between warm and cool colors with mixed media"
+ *   → strip medium: "Interpret a conversation between warm and cool colors"
+ *   → strip verb:   "a conversation between warm and cool colors"
+ *   → strip metaphors: "warm cool colors"
  */
 function extractSearchQuery(promptText: string): string {
   // Take only the first sentence (before twist/tip/color/em-dash clauses)
@@ -89,14 +109,29 @@ function extractSearchQuery(promptText: string): string {
 
   // 2) Strip leading action verb: "Create a park bench" → "a park bench"
   query = query.replace(
-    /^(draw|paint|sketch|create|imagine|capture|explore|interpret|reimagine|reinterpret|build|distill|bring|use|photograph|shoot)\s+/i,
+    /^(draw|paint|sketch|create|imagine|capture|explore|interpret|reimagine|reinterpret|build|distill|bring|use|photograph|shoot|find)\s+/i,
     ''
   );
 
-  // 3) Clean up any remaining loose words
-  query = query.replace(/\s{2,}/g, ' ').trim();
+  // 3) Strip art-metaphor words that mislead photo search
+  query = query.split(/\s+/)
+    .filter(word => !ART_METAPHOR_WORDS.has(word.toLowerCase().replace(/[^a-z]/g, '')))
+    .join(' ');
+
+  // 4) Clean up loose articles and whitespace
+  query = query.replace(/\b(a|an|the)\b\s*/gi, '').replace(/\s{2,}/g, ' ').trim();
 
   return query;
+}
+
+/**
+ * Check if a search query has enough concrete/visual words to produce
+ * meaningful results, or if it's too abstract after stripping metaphors.
+ */
+function isQueryTooAbstract(query: string): boolean {
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  // If 2 or fewer meaningful words remain, the query is probably too vague
+  return words.length <= 1;
 }
 
 // Medium-specific query modifiers for more relevant results
@@ -207,6 +242,11 @@ async function fetchFromPexels(
   let query: string;
   if (promptText) {
     query = extractSearchQuery(promptText);
+    // If the query is too abstract after stripping metaphors, use category fallback
+    if (isQueryTooAbstract(query)) {
+      const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
+      query = queries[Math.floor(Math.random() * queries.length)];
+    }
   } else {
     const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
     query = queries[Math.floor(Math.random() * queries.length)];
@@ -271,6 +311,11 @@ async function fetchFromUnsplash(
   let query: string;
   if (promptText) {
     query = extractSearchQuery(promptText);
+    // If the query is too abstract after stripping metaphors, use category fallback
+    if (isQueryTooAbstract(query)) {
+      const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
+      query = queries[Math.floor(Math.random() * queries.length)];
+    }
   } else {
     const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
     query = queries[Math.floor(Math.random() * queries.length)];
@@ -329,7 +374,13 @@ async function fetchFromWikimediaCommons(
 ): Promise<ReferenceImage[]> {
   let query: string;
   if (promptText) {
-    query = extractSearchQuery(promptText) + ' photo';
+    const extracted = extractSearchQuery(promptText);
+    if (isQueryTooAbstract(extracted)) {
+      const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
+      query = queries[Math.floor(Math.random() * queries.length)];
+    } else {
+      query = extracted + ' photo';
+    }
   } else {
     const queries = SUBJECT_QUERIES[subject] || [subject + ' photography'];
     query = queries[Math.floor(Math.random() * queries.length)] + ' photo';
