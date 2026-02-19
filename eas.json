@@ -12,10 +12,9 @@
       }
     },
     "preview": {
-      "distribution": "internal",
-      "ios": {
-        "simulator": false
-      }
+      "distribution": "store",
+      "autoIncrement": true,
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true
@@ -24,7 +23,8 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "vpcain@gmail.com"
+        "appleId": "vpcain@gmail.com",
+        "ascAppId": "6759357365"
       }
     }
   }

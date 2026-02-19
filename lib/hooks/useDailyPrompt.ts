@@ -169,10 +169,13 @@ type RecentHistory = {
 function generateDevPrompt(
   prefs: DevPreferences,
   source: 'daily' | 'manual',
-  history: RecentHistory
+  history: RecentHistory,
+  specificMedium?: string
 ): Prompt {
-  // Pick medium avoiding recent ones
-  const medium = pickAvoiding(prefs.mediums, history.mediums);
+  // Use specific medium if provided, otherwise pick avoiding recent ones
+  const medium = specificMedium && prefs.mediums.includes(specificMedium)
+    ? specificMedium
+    : pickAvoiding(prefs.mediums, history.mediums);
 
   // Filter subjects by exclusions, then pick avoiding recent
   const eligible = prefs.subjects.filter(s => !prefs.exclusions.includes(s));
@@ -241,7 +244,7 @@ export function useDailyPrompt(): {
   error: string | null;
   generating: boolean;
   isRestDay: boolean;
-  generateManualPrompt: () => Promise<void>;
+  generateManualPrompt: (medium?: string) => Promise<void>;
 } {
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [loading, setLoading] = useState(true);
@@ -340,13 +343,13 @@ export function useDailyPrompt(): {
     fetchDailyPrompt();
   }, [userId]);
 
-  // Generate manual prompt on demand
-  async function handleGenerateManualPrompt() {
+  // Generate manual prompt on demand, optionally locked to a specific medium
+  async function handleGenerateManualPrompt(medium?: string) {
     // Dev/demo mode: generate a preference-aware mock prompt
     if (!userId && isDemo) {
       setGenerating(true);
       const prefs = devPrefs || await loadDevPreferences();
-      const p = generateDevPrompt(prefs, 'manual', historyRef.current);
+      const p = generateDevPrompt(prefs, 'manual', historyRef.current, medium);
       recordHistory(p);
       setPrompt(p);
       setGenerating(false);
@@ -359,7 +362,7 @@ export function useDailyPrompt(): {
     setError(null);
 
     try {
-      const manualPrompt = await createManualPrompt(userId);
+      const manualPrompt = await createManualPrompt(userId, medium);
       recordHistory(manualPrompt);
       setPrompt(manualPrompt);
     } catch (err) {

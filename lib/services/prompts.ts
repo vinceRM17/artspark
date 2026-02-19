@@ -166,7 +166,8 @@ function assemblePromptText(
 async function generatePrompt(
   userId: string,
   preferences: UserPreferences,
-  source: 'daily' | 'manual'
+  source: 'daily' | 'manual',
+  specificMedium?: string
 ): Promise<{
   source: 'daily' | 'manual';
   medium: string;
@@ -177,8 +178,10 @@ async function generatePrompt(
 }> {
   resetSessionIfNeeded();
 
-  // Pick medium with session-level rotation (avoid repeating the same medium back-to-back)
-  const medium = pickWithRotation(preferences.art_mediums, sessionUsedMediums);
+  // Use specific medium if provided, otherwise pick with session-level rotation
+  const medium = specificMedium && preferences.art_mediums.includes(specificMedium)
+    ? specificMedium
+    : pickWithRotation(preferences.art_mediums, sessionUsedMediums);
   sessionUsedMediums.push(medium);
 
   // Get eligible subjects (30-day DB window) and pick one with session rotation
@@ -256,21 +259,34 @@ export async function getTodayPrompt(userId: string): Promise<Prompt> {
   // Generate prompt data
   const promptData = await generatePrompt(userId, preferences, 'daily');
 
-  // Upsert to database (handles race conditions)
-  const { data: newPrompt, error: upsertError } = await supabase
+  // Insert to database
+  const { data: newPrompt, error: insertError } = await supabase
     .from('prompts')
-    .upsert(
-      {
-        user_id: userId,
-        date_key: today,
-        ...promptData,
-      },
-      { onConflict: 'user_id,date_key,source' }
-    )
+    .insert({
+      user_id: userId,
+      date_key: today,
+      ...promptData,
+    })
     .select()
     .single();
 
-  if (upsertError) throw upsertError;
+  // Handle race condition: if another request created the prompt while we were generating,
+  // fetch the existing one instead
+  if (insertError && insertError.code === '23505') {
+    const { data: racePrompt, error: reFetchError } = await supabase
+      .from('prompts')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('date_key', today)
+      .eq('source', 'daily')
+      .single();
+
+    if (reFetchError) throw reFetchError;
+    if (!racePrompt) throw new Error('Failed to create prompt');
+    return racePrompt as Prompt;
+  }
+
+  if (insertError) throw insertError;
   if (!newPrompt) throw new Error('Failed to create prompt');
 
   return newPrompt as Prompt;
@@ -281,7 +297,7 @@ export async function getTodayPrompt(userId: string): Promise<Prompt> {
  * Users can create unlimited manual prompts per day
  * Each call generates a fresh prompt
  */
-export async function createManualPrompt(userId: string): Promise<Prompt> {
+export async function createManualPrompt(userId: string, medium?: string): Promise<Prompt> {
   const today = getTodayDateKey();
 
   // Fetch user preferences
@@ -291,7 +307,7 @@ export async function createManualPrompt(userId: string): Promise<Prompt> {
   }
 
   // Generate prompt data
-  const promptData = await generatePrompt(userId, preferences, 'manual');
+  const promptData = await generatePrompt(userId, preferences, 'manual', medium);
 
   // Insert new manual prompt (not upsert - allows multiple per day)
   const { data: newPrompt, error } = await supabase

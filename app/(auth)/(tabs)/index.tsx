@@ -16,6 +16,7 @@ import {
   Linking,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   FadeInDown,
   FadeIn,
@@ -70,9 +71,12 @@ export default function Home() {
   const [userTier, setUserTier] = useState<UserTier>('free');
   const [userDifficulty, setUserDifficulty] = useState<string>('developing');
   const [freePromptUsed, setFreePromptUsed] = useState(false);
+  const [userMediums, setUserMediums] = useState<string[]>([]);
+  const [selectedMedium, setSelectedMedium] = useState<string | null>(null);
 
   const { session } = useSession();
   const { track } = useAnalytics();
+  const insets = useSafeAreaInsets();
   const userId = session?.user?.id;
   const greeting = useMemo(() => getGreeting(), []);
 
@@ -84,6 +88,7 @@ export default function Home() {
           if (prefs) {
             setUserTier((prefs as any).tier || 'basic');
             setUserDifficulty(prefs.difficulty || 'developing');
+            if (prefs.art_mediums?.length > 0) setUserMediums(prefs.art_mediums);
           }
         } catch {
           setUserTier('basic');
@@ -94,6 +99,7 @@ export default function Home() {
           if (progressJson) {
             const progress = JSON.parse(progressJson);
             if (progress.difficulty) setUserDifficulty(progress.difficulty);
+            if (progress.mediums?.length > 0) setUserMediums(progress.mediums);
           }
         } catch {}
         setUserTier('basic');
@@ -186,7 +192,7 @@ export default function Home() {
         console.error('Failed to update preferences from feedback:', err);
       }
     }
-    generateManualPrompt();
+    generateManualPrompt(selectedMedium || undefined);
   };
 
   const tierLimits = TIER_LIMITS[userTier];
@@ -224,7 +230,7 @@ export default function Home() {
   if (isRestDay && !prompt) {
     return (
       <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
-        <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 40 }}>
+        <View style={{ paddingHorizontal: 24, paddingTop: insets.top + 12, paddingBottom: 40 }}>
           <Text style={{ fontSize: 24, fontWeight: '600', color: colors.text, marginBottom: 8 }}>
             {greeting}!
           </Text>
@@ -292,10 +298,10 @@ export default function Home() {
         style={{ flex: 1, backgroundColor: colors.background }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: insets.top + 12, paddingBottom: 40 }}>
 
           {/* ── Greeting header ── */}
-          <Animated.View entering={FadeIn.duration(500)} style={{ marginBottom: 20 }}>
+          <Animated.View entering={FadeIn.duration(500)} style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 15, color: colors.textMuted, marginBottom: 2 }}>
               {greeting}
             </Text>
@@ -303,6 +309,65 @@ export default function Home() {
               {prompt.source === 'daily' ? "Today's Prompt" : 'Your Prompt'}
             </Text>
           </Animated.View>
+
+          {/* ── Medium selector ── */}
+          {userMediums.length > 1 && (
+            <Animated.View entering={FadeIn.duration(400)} style={{ marginBottom: 16 }}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8 }}
+              >
+                <TouchableOpacity
+                  onPress={() => { hapticLight(); setSelectedMedium(null); }}
+                  activeOpacity={0.7}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 7,
+                    borderRadius: 20,
+                    backgroundColor: selectedMedium === null ? colors.primary : colors.primaryLight,
+                  }}
+                >
+                  <Text style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: selectedMedium === null ? '#FFF' : colors.primary,
+                  }}>
+                    Any Medium
+                  </Text>
+                </TouchableOpacity>
+                {userMediums.map((mediumId) => {
+                  const isSelected = selectedMedium === mediumId;
+                  const label = getLabel(MEDIUM_OPTIONS, mediumId);
+                  return (
+                    <TouchableOpacity
+                      key={mediumId}
+                      onPress={() => {
+                        hapticLight();
+                        setSelectedMedium(mediumId);
+                        generateManualPrompt(mediumId);
+                      }}
+                      activeOpacity={0.7}
+                      style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 7,
+                        borderRadius: 20,
+                        backgroundColor: isSelected ? colors.primary : colors.primaryLight,
+                      }}
+                    >
+                      <Text style={{
+                        fontSize: 13,
+                        fontWeight: '600',
+                        color: isSelected ? '#FFF' : colors.primary,
+                      }}>
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </Animated.View>
+          )}
 
           {/* ── HERO: Prompt Card ── */}
           <Animated.View entering={FadeInDown.duration(600).delay(100)}>
@@ -491,7 +556,7 @@ export default function Home() {
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    onPress={() => { hapticMedium(); generateManualPrompt(); }}
+                    onPress={() => { hapticMedium(); generateManualPrompt(selectedMedium || undefined); }}
                     disabled={generating}
                     style={{
                       flexDirection: 'row',
